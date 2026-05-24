@@ -360,6 +360,7 @@
   <div class="tab" data-tab="crypto" onclick="showTab('crypto')">Crypto <span class="tab-badge" id="badge-crypto">0</span></div>
   <div class="tab" data-tab="mutual" onclick="showTab('mutual')">Mutual Funds <span class="tab-badge" id="badge-mutual">0</span></div>
   <div class="tab" data-tab="realestate" onclick="showTab('realestate')">Real Estate <span class="tab-badge" id="badge-realestate">0</span></div>
+  <div class="tab" data-tab="indiamf" onclick="showTab('indiamf')">India MF <span class="tab-badge" id="badge-indiamf">0</span></div>
   <div class="tab" data-tab="cpf" onclick="showTab('cpf')">CPF</div>
   <div class="tab" data-tab="settings" onclick="showTab('settings')">Settings</div>
 </nav>
@@ -513,6 +514,38 @@
     </div>
   </div>
 
+  <!-- ═══════════════════ INDIA MF ═══════════════════ -->
+  <div id="panel-indiamf" class="panel">
+    <div class="cards-row" id="indiamfCards"></div>
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">India Mutual Funds</div>
+        <div class="table-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openModal('indiamf')">+ Add Fund</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Fund Name</th>
+            <th>AMC / Fund House</th>
+            <th style="text-align:right">Units</th>
+            <th style="text-align:right">Avg NAV (₹)</th>
+            <th style="text-align:right">Current NAV (₹)</th>
+            <th style="text-align:right">Value (₹)</th>
+            <th style="text-align:right">Value (<span id="indiaMfCcySym">S$</span>)</th>
+            <th style="text-align:right">P&amp;L (₹)</th>
+            <th style="text-align:right">P&amp;L (%)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="indiamfBody"></tbody>
+          <tfoot><tr id="indiamfTfoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:8px">* NAV values are in Indian Rupees (₹). Market value is converted to your display currency using the INR exchange rate set in Settings.</p>
+  </div>
+
   <!-- ═══════════════════ CPF ═══════════════════ -->
   <div id="panel-cpf" class="panel">
     <div class="cpf-grid" id="cpfGrid"></div>
@@ -562,6 +595,13 @@
         <div class="setting-control">
           <input type="number" id="settingRate" step="0.01" min="0.5" max="5" style="width:120px" onchange="saveSetting('usdToSgd',parseFloat(this.value))">
           <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="autoFetchRate()">Auto</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">INR → SGD Rate</div><div class="setting-sub">Used for India MF conversion (₹ to display currency)</div></div>
+        <div class="setting-control">
+          <input type="number" id="settingInrRate" step="0.0001" min="0.001" max="1" style="width:120px" onchange="saveSetting('inrToSgd',parseFloat(this.value))">
+          <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="autoFetchInrRate()">Auto</button>
         </div>
       </div>
       <div class="setting-row">
@@ -842,6 +882,64 @@
   </div>
 </div>
 
+<!-- INDIA MF MODAL -->
+<div class="overlay" id="modal-indiamf">
+  <div class="modal">
+    <div class="modal-title" id="indiamfModalTitle">Add India Mutual Fund</div>
+    <button class="modal-close" onclick="closeModal('indiamf')">✕</button>
+    <input type="hidden" id="indiamfEditId">
+    <div class="form-row">
+      <label>Fund Name *</label>
+      <input type="text" id="indiamfName" placeholder="e.g. Mirae Asset Large Cap Fund - Direct Growth">
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>AMC / Fund House</label>
+        <input type="text" id="indiamfHouse" placeholder="e.g. Mirae Asset, HDFC, Axis">
+      </div>
+      <div class="form-row">
+        <label>Category</label>
+        <select id="indiamfCategory">
+          <option value="Large Cap">Large Cap</option>
+          <option value="Mid Cap">Mid Cap</option>
+          <option value="Small Cap">Small Cap</option>
+          <option value="Flexi Cap">Flexi Cap</option>
+          <option value="ELSS">ELSS (Tax Saver)</option>
+          <option value="Debt">Debt</option>
+          <option value="Hybrid">Hybrid</option>
+          <option value="Index Fund">Index Fund</option>
+          <option value="International">International</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Units *</label>
+        <input type="number" id="indiamfUnits" min="0" step="any" placeholder="500.123">
+      </div>
+      <div class="form-row">
+        <label>Avg NAV (₹) *</label>
+        <input type="number" id="indiamfAvgNav" min="0" step="any" placeholder="120.50">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Current NAV (₹)</label>
+        <input type="number" id="indiamfCurrentNav" min="0" step="any" placeholder="Leave blank if unknown">
+      </div>
+      <div class="form-row">
+        <label>Folio Number</label>
+        <input type="text" id="indiamfFolio" placeholder="Optional, for reference">
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('indiamf')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveIndiaMf()">Save Fund</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHANGE PASSWORD MODAL -->
 <div class="overlay" id="modal-changepass">
   <div class="modal">
@@ -1054,7 +1152,7 @@ const STORAGE_KEY = 'jk_portfolio_v3';
 
 const SAMPLE_DATA = {
   version: 3,
-  settings: { currency: 'SGD', usdToSgd: 1.35, dashName: 'My Portfolio', lastRateUpdate: null },
+  settings: { currency: 'SGD', usdToSgd: 1.35, inrToSgd: 0.016, dashName: 'My Portfolio', lastRateUpdate: null },
   stocks: [
     { id: 's1', ticker: 'VOO', name: 'Vanguard S&P 500 ETF', shares: 10, avgCost: 380, currency: 'USD', account: 'Tiger', currentPrice: null, dayChange: null }
   ],
@@ -1063,6 +1161,7 @@ const SAMPLE_DATA = {
   ],
   mutualFunds: [],
   realEstate: [],
+  indiaMf: [],
   cpf: { oa: 25000, sa: 15000, ma: 10000, ra: 0 },
   cpfInvestments: [],
   snapshots: []
@@ -1075,7 +1174,9 @@ function getData() {
     const d = JSON.parse(raw);
     if (!d.cpfInvestments) d.cpfInvestments = [];
     if (!d.snapshots) d.snapshots = [];
+    if (!d.indiaMf) d.indiaMf = [];
     if (!d.settings.usdToSgd) d.settings.usdToSgd = 1.35;
+    if (!d.settings.inrToSgd) d.settings.inrToSgd = 0.016;
     return d;
   } catch(e) { return JSON.parse(JSON.stringify(SAMPLE_DATA)); }
 }
@@ -1099,11 +1200,14 @@ let COLORS = ['#3b82f6','#a855f7','#22c55e','#f59e0b','#ef4444','#14b8a6','#f973
 function ccy() { return state.settings.currency; }
 function rate() { return state.settings.usdToSgd || 1.35; }
 function sym(c) { const m = { SGD:'S$', USD:'$', GBP:'£', HKD:'HK$', AUD:'A$', EUR:'€' }; return m[c]||c+' '; }
+function inrRate() { return state.settings.inrToSgd || 0.016; }
 function toDisplay(amt, fromCcy) {
   const d = ccy();
   if (fromCcy === d) return amt;
   if (fromCcy === 'USD' && d === 'SGD') return amt * rate();
   if (fromCcy === 'SGD' && d === 'USD') return amt / rate();
+  if (fromCcy === 'INR' && d === 'SGD') return amt * inrRate();
+  if (fromCcy === 'INR' && d === 'USD') return amt * inrRate() / rate();
   // Other currencies: approximate via USD
   const toUsd = { USD:1, SGD:1/rate(), GBP:1.27, HKD:0.128, AUD:0.65 };
   const usdAmt = amt * (toUsd[fromCcy]||1);
@@ -1244,6 +1348,7 @@ function renderAll() {
   renderStocks();
   renderCrypto();
   renderMutual();
+  renderIndiaMf();
   renderRealEstate();
   renderCpf();
   syncSettings();
@@ -1254,6 +1359,10 @@ function updateTabBadges() {
   document.getElementById('badge-crypto').textContent = state.crypto.length;
   document.getElementById('badge-mutual').textContent = state.mutualFunds.length;
   document.getElementById('badge-realestate').textContent = state.realEstate.length;
+  document.getElementById('badge-indiamf').textContent = state.indiaMf.length;
+  // update column header currency symbol
+  const symEl = document.getElementById('indiaMfCcySym');
+  if (symEl) symEl.textContent = sym(ccy()).trim();
 }
 
 function updateLastUpdated() {
@@ -1266,8 +1375,8 @@ function updateLastUpdated() {
 
 // ── OVERVIEW ──
 function calcTotals() {
-  let stockVal = 0, cryptoVal = 0, mutualVal = 0, reVal = 0, cpfVal = 0, cpfInvVal = 0;
-  let stockCost = 0, cryptoCost = 0, mutualCost = 0;
+  let stockVal = 0, cryptoVal = 0, mutualVal = 0, reVal = 0, cpfVal = 0, cpfInvVal = 0, indiaMfVal = 0;
+  let stockCost = 0, cryptoCost = 0, mutualCost = 0, indiaMfCost = 0;
 
   for (const s of state.stocks) {
     const cost = toDisplay(s.shares * s.avgCost, s.currency);
@@ -1296,6 +1405,12 @@ function calcTotals() {
   for (const p of state.realEstate) {
     reVal += toDisplay(p.currentValue * ((p.ownership||100)/100), p.currency || 'SGD');
   }
+  for (const f of state.indiaMf) {
+    const cost = toDisplay(f.units * f.avgNav, 'INR');
+    indiaMfCost += cost;
+    const nav = f.currentNav || f.avgNav;
+    indiaMfVal += toDisplay(f.units * nav, 'INR');
+  }
   const cpf = state.cpf;
   cpfVal = toDisplay((cpf.oa||0) + (cpf.sa||0) + (cpf.ma||0) + (cpf.ra||0), 'SGD');
   for (const inv of state.cpfInvestments) {
@@ -1303,13 +1418,13 @@ function calcTotals() {
     cpfInvVal += toDisplay(inv.units * nav, 'SGD');
   }
 
-  const totalVal = stockVal + cryptoVal + mutualVal + reVal + cpfVal + cpfInvVal;
-  const totalCost = stockCost + cryptoCost + mutualCost;
-  const investedVal = stockVal + cryptoVal + mutualVal;
+  const totalVal = stockVal + cryptoVal + mutualVal + reVal + cpfVal + cpfInvVal + indiaMfVal;
+  const totalCost = stockCost + cryptoCost + mutualCost + indiaMfCost;
+  const investedVal = stockVal + cryptoVal + mutualVal + indiaMfVal;
   const totalPL = investedVal - totalCost;
   const totalPLPct = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
 
-  return { totalVal, totalCost, totalPL, totalPLPct, stockVal, cryptoVal, mutualVal, reVal, cpfVal, cpfInvVal };
+  return { totalVal, totalCost, totalPL, totalPLPct, stockVal, cryptoVal, mutualVal, reVal, cpfVal, cpfInvVal, indiaMfVal };
 }
 
 function renderOverview() {
@@ -1353,6 +1468,7 @@ function renderAllocChart(t) {
     { label: 'Stocks/ETFs', val: t.stockVal, color: '#3b82f6' },
     { label: 'Crypto', val: t.cryptoVal, color: '#a855f7' },
     { label: 'Mutual Funds', val: t.mutualVal, color: '#22c55e' },
+    { label: 'India MF', val: t.indiaMfVal, color: '#f97316' },
     { label: 'Real Estate', val: t.reVal, color: '#f59e0b' },
     { label: 'CPF', val: t.cpfVal + t.cpfInvVal, color: '#14b8a6' },
   ].filter(c => c.val > 0);
@@ -1443,6 +1559,11 @@ function renderTopHoldings(t) {
     const nav = f.currentNav || f.avgNav;
     const val = toDisplay(f.units * nav, f.currency || 'SGD');
     holdings.push({ name: f.name.substring(0,20), sub: f.fundHouse || 'Fund', val, color: COLORS[idx++%12] });
+  });
+  state.indiaMf.forEach(f => {
+    const nav = f.currentNav || f.avgNav;
+    const val = toDisplay(f.units * nav, 'INR');
+    holdings.push({ name: f.name.substring(0,20), sub: (f.amc||'India MF') + ' · ' + (f.category||''), val, color: '#f97316' });
   });
   state.realEstate.forEach(p => {
     holdings.push({ name: p.name.substring(0,20), sub: p.type || 'Property', val: toDisplay(p.currentValue * ((p.ownership||100)/100), p.currency || 'SGD'), color: COLORS[idx++%12] });
@@ -1598,6 +1719,130 @@ function renderMutual() {
     <td></td>`;
 }
 
+// ── INDIA MF ──
+function renderIndiaMf() {
+  const body = document.getElementById('indiamfBody');
+  if (!state.indiaMf.length) {
+    body.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🇮🇳</div><div class="empty-msg">No India mutual funds yet. Click "+ Add Fund" to get started.</div></div></td></tr>`;
+    document.getElementById('indiamfTfoot').innerHTML = '';
+    // summary cards
+    document.getElementById('indiamfCards').innerHTML = `
+      <div class="card card-orange"><div class="card-label">Total India MF Value</div><div class="card-value">${fmt(0)}</div><div class="card-sub">No holdings yet</div></div>`;
+    return;
+  }
+  let totValInr = 0, totCostInr = 0;
+  body.innerHTML = state.indiaMf.map((f, i) => {
+    const nav     = f.currentNav || f.avgNav;
+    const valInr  = f.units * nav;
+    const costInr = f.units * f.avgNav;
+    const pl      = valInr - costInr;
+    const plPct   = costInr > 0 ? (pl / costInr) * 100 : 0;
+    const valDisp = toDisplay(valInr, 'INR');
+    totValInr  += valInr;
+    totCostInr += costInr;
+    return `<tr>
+      <td><div class="ticker-cell">
+        <div class="ticker-icon" style="background:#f9731622;color:#f97316">${initials(f.name)}</div>
+        <div>
+          <div style="font-weight:600;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
+          <div class="ticker-name">${f.category||''} ${f.folio ? '· Folio: '+f.folio : ''}</div>
+        </div>
+      </div></td>
+      <td>${f.amc||'—'}</td>
+      <td style="text-align:right">${(+f.units).toLocaleString('en-IN',{maximumFractionDigits:3})}</td>
+      <td style="text-align:right">₹${(+f.avgNav).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="text-align:right">${f.currentNav ? '₹'+f.currentNav.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}) : '<span class="na">Manual</span>'}</td>
+      <td style="text-align:right;font-weight:600">₹${valInr.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="text-align:right;font-weight:600">${fmt(valDisp)}</td>
+      <td style="text-align:right" class="${plClass(pl)}">${plSign(pl)}₹${Math.abs(pl).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td style="text-align:right" class="${plClass(plPct)}">${fmtPct(plPct)}</td>
+      <td><div class="act-btns">
+        <button class="btn btn-secondary btn-sm" onclick="editIndiaMf('${f.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('indiaMf','${f.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  const totPLInr  = totValInr - totCostInr;
+  const totValDisp = toDisplay(totValInr, 'INR');
+  const totPLDisp  = toDisplay(totPLInr, 'INR');
+  document.getElementById('indiamfTfoot').innerHTML = `
+    <td colspan="5" style="font-weight:600">TOTAL (${state.indiaMf.length} funds)</td>
+    <td style="text-align:right;font-weight:700">₹${totValInr.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    <td style="text-align:right;font-weight:700">${fmt(totValDisp)}</td>
+    <td style="text-align:right" class="${plClass(totPLInr)}">₹${plSign(totPLInr)}${Math.abs(totPLInr).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    <td style="text-align:right" class="${plClass(totPLInr)}">${totCostInr>0?fmtPct((totPLInr/totCostInr)*100):'—'}</td>
+    <td></td>`;
+
+  // Summary cards for India MF tab
+  const plPctTot = totCostInr > 0 ? (totPLInr/totCostInr)*100 : 0;
+  document.getElementById('indiamfCards').innerHTML = `
+    <div class="card card-orange">
+      <div class="card-label">Total Value (₹)</div>
+      <div class="card-value">₹${totValInr.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+      <div class="card-sub">${fmt(totValDisp)} at current rate</div>
+    </div>
+    <div class="card ${totPLInr>=0?'card-green':'card-red'}">
+      <div class="card-label">Total P&L (₹)</div>
+      <div class="card-value ${plClass(totPLInr)}">${plSign(totPLInr)}₹${Math.abs(totPLInr).toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+      <div class="card-sub ${plClass(plPctTot)}">${fmtPct(plPctTot)}</div>
+    </div>
+    <div class="card card-purple">
+      <div class="card-label">Invested (₹)</div>
+      <div class="card-value">₹${totCostInr.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+      <div class="card-sub">${state.indiaMf.length} fund${state.indiaMf.length!==1?'s':''}</div>
+    </div>
+    <div class="card" style="border-left:3px solid #f97316">
+      <div class="card-label">INR → ${ccy()} Rate</div>
+      <div class="card-value" style="font-size:20px">₹1 = ${sym(ccy())}${inrRate().toFixed(4)}</div>
+      <div class="card-sub"><a href="#" onclick="showTab('settings');return false">Update in Settings</a></div>
+    </div>`;
+}
+
+// ── INDIA MF CRUD ──
+function saveIndiaMf() {
+  const name    = document.getElementById('indiamfName').value.trim();
+  const amc     = document.getElementById('indiamfHouse').value.trim();
+  const category = document.getElementById('indiamfCategory').value;
+  const units   = parseFloat(document.getElementById('indiamfUnits').value);
+  const avgNav  = parseFloat(document.getElementById('indiamfAvgNav').value);
+  const currentNav = parseFloat(document.getElementById('indiamfCurrentNav').value) || null;
+  const folio   = document.getElementById('indiamfFolio').value.trim();
+  const editId  = document.getElementById('indiamfEditId').value;
+
+  if (!name || isNaN(units) || isNaN(avgNav) || units <= 0 || avgNav <= 0) {
+    toast('Please fill in all required fields', 'error'); return;
+  }
+  state = getData();
+  const entry = { id: uid(), name, amc, category, units, avgNav, currentNav, folio };
+  if (editId) {
+    const idx = state.indiaMf.findIndex(f => f.id === editId);
+    if (idx >= 0) state.indiaMf[idx] = { ...entry, id: editId };
+    toast('Fund updated', 'success');
+  } else {
+    state.indiaMf.push(entry);
+    toast('India MF added!', 'success');
+  }
+  save(state);
+  closeModal('indiamf');
+}
+
+function editIndiaMf(id) {
+  state = getData();
+  const f = state.indiaMf.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('indiamfModalTitle').textContent = 'Edit India MF';
+  document.getElementById('indiamfEditId').value = f.id;
+  document.getElementById('indiamfName').value = f.name;
+  document.getElementById('indiamfHouse').value = f.amc||'';
+  document.getElementById('indiamfCategory').value = f.category||'Large Cap';
+  document.getElementById('indiamfUnits').value = f.units;
+  document.getElementById('indiamfAvgNav').value = f.avgNav;
+  document.getElementById('indiamfCurrentNav').value = f.currentNav||'';
+  document.getElementById('indiamfFolio').value = f.folio||'';
+  openModal('indiamf');
+}
+
 // ── REAL ESTATE ──
 function renderRealEstate() {
   const body = document.getElementById('reBody');
@@ -1721,6 +1966,8 @@ function syncSettings() {
   if (cc) cc.value = s.currency || 'SGD';
   const rr = document.getElementById('settingRate');
   if (rr) rr.value = (s.usdToSgd || 1.35).toFixed(4);
+  const ir = document.getElementById('settingInrRate');
+  if (ir) ir.value = (s.inrToSgd || 0.016).toFixed(4);
   const nn = document.getElementById('settingName');
   if (nn) nn.value = s.dashName || '';
   if (s.dashName) document.title = s.dashName;
@@ -1745,6 +1992,21 @@ async function autoFetchRate() {
   } else {
     toast('Failed to fetch rate', 'error');
   }
+}
+
+async function autoFetchInrRate() {
+  toast('Fetching INR rate…');
+  try {
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/INR', { signal: AbortSignal.timeout(6000) });
+    const j = await r.json();
+    const inrSgd = j.rates.SGD;
+    if (inrSgd) {
+      state = getData();
+      state.settings.inrToSgd = inrSgd;
+      save(state);
+      toast(`Rate updated: ₹1 = S$${inrSgd.toFixed(4)}`, 'success');
+    } else { toast('Failed to fetch INR rate', 'error'); }
+  } catch(e) { toast('Failed to fetch INR rate', 'error'); }
 }
 
 // ══════════════════════════════════════════════════
