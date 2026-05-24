@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Portfolio Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #131f35;
+      --surface2: #1a2942;
+      --surface3: #233354;
+      --border: #2e4470;
+      --text: #e2e8f0;
+      --text2: #8fabd0;
+      --text3: #5a7aaa;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --green: #22c55e;
+      --green-bg: rgba(34,197,94,0.12);
+      --red: #ef4444;
+      --red-bg: rgba(239,68,68,0.12);
+      --yellow: #f59e0b;
+      --purple: #a855f7;
+      --teal: #14b8a6;
+      --orange: #f97316;
+      --pink: #ec4899;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, -apple-system, sans-serif; min-height: 100vh; }
+    a { color: var(--accent); }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); }
+    .logo-icon { width: 34px; height: 34px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .last-updated { color: var(--text3); font-size: 12px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--surface3); color: var(--text2); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface2); color: var(--text); }
+    .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .btn-icon { padding: 8px; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    #refreshBtn .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── NAV TABS ── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex; gap: 4px;
+      overflow-x: auto;
+    }
+    nav::-webkit-scrollbar { height: 0; }
+    .tab {
+      padding: 14px 16px;
+      font-size: 13px; font-weight: 500;
+      color: var(--text3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .tab:hover { color: var(--text2); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-badge { display: inline-block; background: var(--surface3); color: var(--text3); border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px; }
+
+    /* ── MAIN ── */
+    main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .card-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .card-value { font-size: 24px; font-weight: 700; }
+    .card-sub { font-size: 13px; margin-top: 6px; color: var(--text2); }
+    .card-accent { border-left: 3px solid var(--accent); }
+    .card-green { border-left: 3px solid var(--green); }
+    .card-red { border-left: 3px solid var(--red); }
+    .card-purple { border-left: 3px solid var(--purple); }
+    .card-teal { border-left: 3px solid var(--teal); }
+    .card-orange { border-left: 3px solid var(--orange); }
+
+    /* ── CHARTS ── */
+    .charts-row { display: grid; grid-template-columns: 340px 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .chart-title { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .chart-wrap { position: relative; }
+    .chart-legend { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── TABLE ── */
+    .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+    .table-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .table-title { font-size: 14px; font-weight: 600; }
+    .table-actions { display: flex; gap: 8px; align-items: center; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid rgba(46,68,112,0.4); transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 12px 16px; vertical-space: nowrap; }
+    .tfoot td { padding: 12px 16px; font-weight: 600; background: var(--surface2); border-top: 1px solid var(--border); font-size: 13px; }
+    .ticker-cell { display: flex; align-items: center; gap: 10px; }
+    .ticker-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+    .ticker-name { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .price-loading { color: var(--text3); font-style: italic; }
+    .up { color: var(--green); }
+    .dn { color: var(--red); }
+    .na { color: var(--text3); }
+    .act-btns { display: flex; gap: 6px; }
+    .empty-state { text-align: center; padding: 40px; color: var(--text3); }
+    .empty-state .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty-state .empty-msg { font-size: 14px; margin-bottom: 16px; }
+
+    /* ── CPF ── */
+    .cpf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .cpf-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .cpf-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .cpf-badge { font-size: 11px; background: var(--surface3); color: var(--text3); padding: 3px 8px; border-radius: 20px; }
+    .cpf-rate { font-size: 11px; color: var(--green); }
+    .cpf-amount { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .cpf-label { font-size: 12px; color: var(--text3); }
+    .cpf-edit-wrap { margin-top: 12px; }
+    .cpf-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 8px 10px; font-size: 14px; }
+    .cpf-input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── MODAL ── */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+    .overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 20px; line-height: 1; }
+    .modal-close:hover { color: var(--text); }
+    .form-row { margin-bottom: 16px; }
+    .form-row label { display: block; font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px;
+    }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent); }
+    .form-row select option { background: var(--surface2); }
+    .form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+    .form-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+    /* ── TOAST ── */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 18px; border-radius: var(--radius-sm); font-size: 13px; z-index: 300; transform: translateY(20px); opacity: 0; transition: all 0.3s; pointer-events: none; }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-color: var(--green); }
+    #toast.error { border-color: var(--red); }
+
+    /* ── SETTINGS PANEL ── */
+    .settings-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .settings-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--text2); }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(46,68,112,0.4); }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 13px; }
+    .setting-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .setting-control input, .setting-control select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 13px; min-width: 140px; }
+
+    /* ── PROGRESS / LOADING ── */
+    .progress-bar-wrap { height: 3px; background: var(--surface3); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .progress-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
+
+    /* ── PERF RANGE BTNS ── */
+    .range-btns { display: flex; gap: 4px; }
+    .range-btn { padding: 3px 9px; font-size: 11px; border-radius: 5px; border: 1px solid var(--border); background: none; color: var(--text3); cursor: pointer; transition: all 0.1s; }
+    .range-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── OVERVIEW HOLDINGS TABLE ── */
+    .top-holdings { margin-top: 0; }
+    .breakdown-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(46,68,112,0.3); }
+    .breakdown-row:last-child { border-bottom: none; }
+    .breakdown-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .breakdown-info { flex: 1; min-width: 0; }
+    .breakdown-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .breakdown-sub { font-size: 11px; color: var(--text3); }
+    .breakdown-value { text-align: right; flex-shrink: 0; }
+    .breakdown-amount { font-size: 13px; font-weight: 600; }
+    .breakdown-pct { font-size: 11px; color: var(--text3); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      main { padding: 12px; }
+      header { padding: 0 12px; }
+      nav { padding: 0 12px; }
+      .cards-row { grid-template-columns: 1fr 1fr; }
+      .form-two { grid-template-columns: 1fr; }
+      .modal { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">📈</div>
+    <span>Portfolio</span>
+  </div>
+  <div class="header-right">
+    <span class="last-updated" id="lastUpdated">Not yet refreshed</span>
+    <button class="btn btn-primary" id="refreshBtn" onclick="refreshAllPrices()">
+      <span id="refreshIcon">↻</span> Refresh Prices
+    </button>
+    <button class="btn btn-secondary btn-icon" onclick="showTab('settings')" title="Settings">⚙️</button>
+  </div>
+</header>
+
+<!-- NAV TABS -->
+<nav>
+  <div class="tab active" data-tab="overview" onclick="showTab('overview')">Overview</div>
+  <div class="tab" data-tab="stocks" onclick="showTab('stocks')">Stocks / ETFs <span class="tab-badge" id="badge-stocks">0</span></div>
+  <div class="tab" data-tab="crypto" onclick="showTab('crypto')">Crypto <span class="tab-badge" id="badge-crypto">0</span></div>
+  <div class="tab" data-tab="mutual" onclick="showTab('mutual')">Mutual Funds <span class="tab-badge" id="badge-mutual">0</span></div>
+  <div class="tab" data-tab="realestate" onclick="showTab('realestate')">Real Estate <span class="tab-badge" id="badge-realestate">0</span></div>
+  <div class="tab" data-tab="cpf" onclick="showTab('cpf')">CPF</div>
+  <div class="tab" data-tab="settings" onclick="showTab('settings')">Settings</div>
+</nav>
+
+<main>
+
+  <!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+  <div id="panel-overview" class="panel active">
+    <div class="cards-row" id="overviewCards"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Allocation</div>
+        <div class="chart-wrap"><canvas id="allocChart" height="220"></canvas></div>
+        <div class="chart-legend" id="allocLegend"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">
+          Portfolio Performance
+          <div class="range-btns">
+            <button class="range-btn active" data-range="30" onclick="setRange(30,this)">1M</button>
+            <button class="range-btn" data-range="90" onclick="setRange(90,this)">3M</button>
+            <button class="range-btn" data-range="180" onclick="setRange(180,this)">6M</button>
+            <button class="range-btn" data-range="365" onclick="setRange(365,this)">1Y</button>
+            <button class="range-btn" data-range="0" onclick="setRange(0,this)">All</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="perfChart" height="220"></canvas></div>
+      </div>
+    </div>
+    <div class="table-card top-holdings">
+      <div class="table-header"><div class="table-title">Top Holdings</div></div>
+      <div style="padding:8px 20px 16px" id="topHoldingsList"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ STOCKS ═══════════════════ -->
+  <div id="panel-stocks" class="panel">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Stocks &amp; ETFs</div>
+        <div class="table-actions">
+          <button class="btn btn-secondary btn-sm" onclick="importCSV('stocks')">📥 Import CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('stock')">+ Add Holding</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="stocksTable">
+          <thead><tr>
+            <th>Symbol / Name</th>
+            <th>Account</th>
+            <th style="text-align:right">Shares</th>
+            <th style="text-align:right">Avg Cost</th>
+            <th style="text-align:right">Current Price</th>
+            <th style="text-align:right">Day Chg</th>
+            <th style="text-align:right">Market Value</th>
+            <th style="text-align:right">P&amp;L ($)</th>
+            <th style="text-align:right">P&amp;L (%)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="stocksBody"></tbody>
+          <tfoot><tr id="stocksTfoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CRYPTO ═══════════════════ -->
+  <div id="panel-crypto" class="panel">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Cryptocurrency</div>
+        <div class="table-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('crypto')">+ Add Holding</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="cryptoTable">
+          <thead><tr>
+            <th>Coin</th>
+            <th style="text-align:right">Amount</th>
+            <th style="text-align:right">Avg Cost</th>
+            <th style="text-align:right">Current Price</th>
+            <th style="text-align:right">24h Chg</th>
+            <th style="text-align:right">Market Value</th>
+            <th style="text-align:right">P&amp;L ($)</th>
+            <th style="text-align:right">P&amp;L (%)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="cryptoBody"></tbody>
+          <tfoot><tr id="cryptoTfoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MUTUAL FUNDS ═══════════════════ -->
+  <div id="panel-mutual" class="panel">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Mutual Funds</div>
+        <div class="table-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('mutual')">+ Add Fund</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Fund Name</th>
+            <th>Fund House</th>
+            <th style="text-align:right">Units</th>
+            <th style="text-align:right">Avg NAV</th>
+            <th style="text-align:right">Current NAV</th>
+            <th style="text-align:right">Market Value</th>
+            <th style="text-align:right">P&amp;L ($)</th>
+            <th style="text-align:right">P&amp;L (%)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="mutualBody"></tbody>
+          <tfoot><tr id="mutualTfoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ REAL ESTATE ═══════════════════ -->
+  <div id="panel-realestate" class="panel">
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">Real Estate</div>
+        <div class="table-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('realestate')">+ Add Property</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Property</th>
+            <th>Type</th>
+            <th>Location</th>
+            <th style="text-align:right">Purchase Price</th>
+            <th style="text-align:right">Current Value</th>
+            <th style="text-align:right">Ownership %</th>
+            <th style="text-align:right">My Share</th>
+            <th style="text-align:right">Gain / Loss</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="reBody"></tbody>
+          <tfoot><tr id="reTfoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CPF ═══════════════════ -->
+  <div id="panel-cpf" class="panel">
+    <div class="cpf-grid" id="cpfGrid"></div>
+    <div class="table-card">
+      <div class="table-header">
+        <div class="table-title">CPF Investment Account</div>
+        <div class="table-actions">
+          <button class="btn btn-primary btn-sm" onclick="openModal('cpfinv')">+ Add CPF Investment</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Symbol / Name</th>
+            <th>Account</th>
+            <th style="text-align:right">Units</th>
+            <th style="text-align:right">Avg Cost</th>
+            <th style="text-align:right">Current Price</th>
+            <th style="text-align:right">Market Value</th>
+            <th style="text-align:right">P&amp;L ($)</th>
+            <th style="text-align:right">P&amp;L (%)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="cpfInvBody"></tbody>
+          <tfoot><tr id="cpfInvTfoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:8px">* CPF interest is credited annually by CPF Board. OA earns 2.5% p.a., SA/MA/RA earn 4% p.a. An extra 1% is paid on the first $60,000 of combined CPF balances.</p>
+  </div>
+
+  <!-- ═══════════════════ SETTINGS ═══════════════════ -->
+  <div id="panel-settings" class="panel">
+    <div class="settings-section">
+      <h3>Display Settings</h3>
+      <div class="setting-row">
+        <div><div class="setting-label">Display Currency</div><div class="setting-sub">All values shown in this currency</div></div>
+        <div class="setting-control">
+          <select id="settingCurrency" onchange="saveSetting('currency',this.value)">
+            <option value="SGD">SGD (S$)</option>
+            <option value="USD">USD ($)</option>
+          </select>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">USD → SGD Rate</div><div class="setting-sub">Used for currency conversion</div></div>
+        <div class="setting-control">
+          <input type="number" id="settingRate" step="0.01" min="0.5" max="5" style="width:120px" onchange="saveSetting('usdToSgd',parseFloat(this.value))">
+          <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="autoFetchRate()">Auto</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Dashboard Name</div><div class="setting-sub">Shown in the browser tab</div></div>
+        <div class="setting-control">
+          <input type="text" id="settingName" placeholder="My Portfolio" onchange="saveSetting('dashName',this.value)">
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Data Management</h3>
+      <div class="setting-row">
+        <div><div class="setting-label">Export Backup</div><div class="setting-sub">Download all your portfolio data as JSON</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 Export JSON</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Import Backup</div><div class="setting-sub">Restore from a previously exported JSON file</div></div>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer">📥 Import JSON<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Take Snapshot</div><div class="setting-sub">Save today's portfolio value for performance tracking</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="takeSnapshot()">📸 Snapshot Now</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Clear All Data</div><div class="setting-sub">Delete everything and start fresh</div></div>
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑 Clear All</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>About</h3>
+      <div style="color:var(--text2);font-size:13px;line-height:1.7">
+        <p>This dashboard runs entirely in your browser. All data is stored locally using localStorage — nothing is sent to any server.</p>
+        <p style="margin-top:8px">Live stock/ETF/fund prices are fetched from <strong>Yahoo Finance</strong> via a CORS proxy. Crypto prices are from <strong>CoinGecko</strong>. Exchange rates from <strong>ExchangeRate-API</strong>.</p>
+        <p style="margin-top:8px">To make it available online from anywhere, deploy the <code>index.html</code> file to <a href="https://pages.github.com" target="_blank">GitHub Pages</a>. See <code>README.md</code> for instructions.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- STOCK MODAL -->
+<div class="overlay" id="modal-stock">
+  <div class="modal">
+    <div class="modal-title" id="stockModalTitle">Add Stock / ETF</div>
+    <button class="modal-close" onclick="closeModal('stock')">✕</button>
+    <input type="hidden" id="stockEditId">
+    <div class="form-row">
+      <label>Ticker Symbol *</label>
+      <input type="text" id="stockTicker" placeholder="e.g. AAPL, VOO, ES3.SI" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+      <div class="form-hint">Use .SI suffix for SGX stocks (e.g. D05.SI for DBS)</div>
+    </div>
+    <div class="form-row">
+      <label>Name / Description</label>
+      <input type="text" id="stockName" placeholder="e.g. Apple Inc.">
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Shares / Units *</label>
+        <input type="number" id="stockShares" min="0" step="any" placeholder="100">
+      </div>
+      <div class="form-row">
+        <label>Avg Cost Per Share *</label>
+        <input type="number" id="stockAvgCost" min="0" step="any" placeholder="150.00">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Currency</label>
+        <select id="stockCurrency">
+          <option value="SGD">SGD</option>
+          <option value="USD">USD</option>
+          <option value="HKD">HKD</option>
+          <option value="GBP">GBP</option>
+          <option value="AUD">AUD</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Account</label>
+        <input type="text" id="stockAccount" placeholder="e.g. CDP, Moomoo, Tiger">
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('stock')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStock()">Save Holding</button>
+    </div>
+  </div>
+</div>
+
+<!-- CRYPTO MODAL -->
+<div class="overlay" id="modal-crypto">
+  <div class="modal">
+    <div class="modal-title" id="cryptoModalTitle">Add Crypto</div>
+    <button class="modal-close" onclick="closeModal('crypto')">✕</button>
+    <input type="hidden" id="cryptoEditId">
+    <div class="form-row">
+      <label>CoinGecko ID *</label>
+      <input type="text" id="cryptoCoinId" placeholder="e.g. bitcoin, ethereum, solana" style="text-transform:lowercase" oninput="this.value=this.value.toLowerCase()">
+      <div class="form-hint">Find the ID at <a href="https://coingecko.com" target="_blank">coingecko.com</a> — use the ID from the URL (e.g. "bitcoin")</div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Symbol</label>
+        <input type="text" id="cryptoSymbol" placeholder="BTC" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="form-row">
+        <label>Name</label>
+        <input type="text" id="cryptoName" placeholder="Bitcoin">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Amount *</label>
+        <input type="number" id="cryptoAmount" min="0" step="any" placeholder="0.5">
+      </div>
+      <div class="form-row">
+        <label>Avg Cost (USD) *</label>
+        <input type="number" id="cryptoAvgCost" min="0" step="any" placeholder="40000">
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('crypto')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCrypto()">Save Holding</button>
+    </div>
+  </div>
+</div>
+
+<!-- MUTUAL FUND MODAL -->
+<div class="overlay" id="modal-mutual">
+  <div class="modal">
+    <div class="modal-title" id="mutualModalTitle">Add Mutual Fund</div>
+    <button class="modal-close" onclick="closeModal('mutual')">✕</button>
+    <input type="hidden" id="mutualEditId">
+    <div class="form-row">
+      <label>Fund Name *</label>
+      <input type="text" id="mutualName" placeholder="e.g. Fullerton Short Term Interest Rate Fund">
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Fund House</label>
+        <input type="text" id="mutualHouse" placeholder="e.g. Fullerton, Nikko AM">
+      </div>
+      <div class="form-row">
+        <label>Yahoo Ticker (optional)</label>
+        <input type="text" id="mutualTicker" placeholder="for live NAV" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Units *</label>
+        <input type="number" id="mutualUnits" min="0" step="any" placeholder="1000">
+      </div>
+      <div class="form-row">
+        <label>Avg NAV *</label>
+        <input type="number" id="mutualAvgNav" min="0" step="any" placeholder="1.00">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Current NAV</label>
+        <input type="number" id="mutualCurrentNav" min="0" step="any" placeholder="auto-fetched or manual">
+      </div>
+      <div class="form-row">
+        <label>Currency</label>
+        <select id="mutualCurrency">
+          <option value="SGD">SGD</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('mutual')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMutual()">Save Fund</button>
+    </div>
+  </div>
+</div>
+
+<!-- REAL ESTATE MODAL -->
+<div class="overlay" id="modal-realestate">
+  <div class="modal">
+    <div class="modal-title" id="reModalTitle">Add Property</div>
+    <button class="modal-close" onclick="closeModal('realestate')">✕</button>
+    <input type="hidden" id="reEditId">
+    <div class="form-row">
+      <label>Property Name *</label>
+      <input type="text" id="reName" placeholder="e.g. Jurong West HDB, Condo Unit #12-34">
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Type</label>
+        <select id="reType">
+          <option value="HDB">HDB</option>
+          <option value="Condo">Condo</option>
+          <option value="Landed">Landed</option>
+          <option value="Commercial">Commercial</option>
+          <option value="Industrial">Industrial</option>
+          <option value="Overseas">Overseas</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Location</label>
+        <input type="text" id="reLocation" placeholder="e.g. Jurong West, Singapore">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Purchase Price *</label>
+        <input type="number" id="rePurchasePrice" min="0" step="any" placeholder="500000">
+      </div>
+      <div class="form-row">
+        <label>Current Value *</label>
+        <input type="number" id="reCurrentValue" min="0" step="any" placeholder="650000">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Ownership %</label>
+        <input type="number" id="reOwnership" min="1" max="100" step="any" value="100" placeholder="100">
+      </div>
+      <div class="form-row">
+        <label>Currency</label>
+        <select id="reCurrency">
+          <option value="SGD">SGD</option>
+          <option value="USD">USD</option>
+          <option value="AUD">AUD</option>
+          <option value="GBP">GBP</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('realestate')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRealEstate()">Save Property</button>
+    </div>
+  </div>
+</div>
+
+<!-- CPF INVESTMENT MODAL -->
+<div class="overlay" id="modal-cpfinv">
+  <div class="modal">
+    <div class="modal-title" id="cpfInvModalTitle">Add CPF Investment</div>
+    <button class="modal-close" onclick="closeModal('cpfinv')">✕</button>
+    <input type="hidden" id="cpfInvEditId">
+    <div class="form-row">
+      <label>Ticker Symbol *</label>
+      <input type="text" id="cpfInvTicker" placeholder="e.g. ES3.SI" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-row">
+      <label>Name / Description</label>
+      <input type="text" id="cpfInvName" placeholder="e.g. STI ETF">
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>CPF Account</label>
+        <select id="cpfInvAccount">
+          <option value="OA">OA (Ordinary)</option>
+          <option value="SA">SA (Special)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Units *</label>
+        <input type="number" id="cpfInvUnits" min="0" step="any" placeholder="100">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Avg Cost Per Unit *</label>
+      <input type="number" id="cpfInvAvgCost" min="0" step="any" placeholder="3.50">
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('cpfinv')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCpfInv()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  DATA LAYER
+// ══════════════════════════════════════════════════
+const STORAGE_KEY = 'jk_portfolio_v3';
+
+const SAMPLE_DATA = {
+  version: 3,
+  settings: { currency: 'SGD', usdToSgd: 1.35, dashName: 'My Portfolio', lastRateUpdate: null },
+  stocks: [
+    { id: 's1', ticker: 'VOO', name: 'Vanguard S&P 500 ETF', shares: 10, avgCost: 380, currency: 'USD', account: 'Tiger', currentPrice: null, dayChange: null }
+  ],
+  crypto: [
+    { id: 'c1', coinId: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', amount: 0.1, avgCost: 42000, currentPrice: null, change24h: null }
+  ],
+  mutualFunds: [],
+  realEstate: [],
+  cpf: { oa: 25000, sa: 15000, ma: 10000, ra: 0 },
+  cpfInvestments: [],
+  snapshots: []
+};
+
+function getData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(SAMPLE_DATA));
+    const d = JSON.parse(raw);
+    if (!d.cpfInvestments) d.cpfInvestments = [];
+    if (!d.snapshots) d.snapshots = [];
+    if (!d.settings.usdToSgd) d.settings.usdToSgd = 1.35;
+    return d;
+  } catch(e) { return JSON.parse(JSON.stringify(SAMPLE_DATA)); }
+}
+
+function save(d) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+  renderAll();
+}
+
+function uid() { return '_' + Math.random().toString(36).substr(2,9); }
+
+let state = getData();
+let activeTab = 'overview';
+let perfRange = 30;
+let allocChart = null, perfChart = null;
+let COLORS = ['#3b82f6','#a855f7','#22c55e','#f59e0b','#ef4444','#14b8a6','#f97316','#ec4899','#6366f1','#0ea5e9','#84cc16','#e879f9'];
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+function ccy() { return state.settings.currency; }
+function rate() { return state.settings.usdToSgd || 1.35; }
+function sym(c) { const m = { SGD:'S$', USD:'$', GBP:'£', HKD:'HK$', AUD:'A$', EUR:'€' }; return m[c]||c+' '; }
+function toDisplay(amt, fromCcy) {
+  const d = ccy();
+  if (fromCcy === d) return amt;
+  if (fromCcy === 'USD' && d === 'SGD') return amt * rate();
+  if (fromCcy === 'SGD' && d === 'USD') return amt / rate();
+  // Other currencies: approximate via USD
+  const toUsd = { USD:1, SGD:1/rate(), GBP:1.27, HKD:0.128, AUD:0.65 };
+  const usdAmt = amt * (toUsd[fromCcy]||1);
+  return d === 'SGD' ? usdAmt * rate() : usdAmt;
+}
+function fmt(v, dec=2) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return sym(ccy()) + Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function fmtPct(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+}
+function plClass(v) { return v > 0 ? 'up' : v < 0 ? 'dn' : 'na'; }
+function plSign(v) { return v > 0 ? '+' : ''; }
+function iconBg(idx) { return COLORS[idx % COLORS.length]; }
+function initials(s) { return (s||'?').split(/[\s./]/)[0].substring(0,3).toUpperCase(); }
+
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 3000);
+}
+
+// ══════════════════════════════════════════════════
+//  PRICE FETCHING
+// ══════════════════════════════════════════════════
+async function fetchStockPrice(ticker) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=1d`;
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  try {
+    const r = await fetch(proxy, { signal: AbortSignal.timeout(12000) });
+    const j = await r.json();
+    const parsed = JSON.parse(j.contents);
+    const res = parsed?.chart?.result?.[0];
+    if (!res) return null;
+    const meta = res.meta;
+    const cur = meta.regularMarketPrice;
+    const prev = meta.chartPreviousClose || meta.previousClose || cur;
+    return { price: cur, currency: meta.currency, change: cur - prev, changePct: ((cur - prev) / prev) * 100 };
+  } catch(e) { console.warn('Stock price failed:', ticker, e.message); return null; }
+}
+
+async function fetchCryptoPrices(ids) {
+  if (!ids.length) return {};
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd,sgd&include_24hr_change=true`;
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    return await r.json();
+  } catch(e) { console.warn('Crypto price failed:', e.message); return {}; }
+}
+
+async function fetchExchangeRate() {
+  try {
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD', { signal: AbortSignal.timeout(6000) });
+    const j = await r.json();
+    return j.rates.SGD;
+  } catch(e) { return null; }
+}
+
+async function refreshAllPrices() {
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.disabled = true;
+  icon.className = 'spin';
+  icon.textContent = '↻';
+  toast('Refreshing prices…');
+
+  // Exchange rate
+  const sgdRate = await fetchExchangeRate();
+  if (sgdRate) {
+    state.settings.usdToSgd = sgdRate;
+    document.getElementById('settingRate').value = sgdRate.toFixed(4);
+  }
+
+  // Stocks
+  for (const s of state.stocks) {
+    const p = await fetchStockPrice(s.ticker);
+    if (p) { s.currentPrice = p.price; s.dayChange = p.changePct; s.priceCurrency = p.currency; }
+    await delay(300);
+  }
+
+  // CPF Investments
+  for (const s of state.cpfInvestments) {
+    const p = await fetchStockPrice(s.ticker);
+    if (p) { s.currentPrice = p.price; s.dayChange = p.changePct; s.priceCurrency = p.currency; }
+    await delay(300);
+  }
+
+  // Mutual funds with ticker
+  for (const f of state.mutualFunds) {
+    if (f.ticker) {
+      const p = await fetchStockPrice(f.ticker);
+      if (p) { f.currentNav = p.price; }
+      await delay(300);
+    }
+  }
+
+  // Crypto
+  const coinIds = state.crypto.map(c => c.coinId).filter(Boolean);
+  const cPrices = await fetchCryptoPrices(coinIds);
+  for (const c of state.crypto) {
+    const pd = cPrices[c.coinId];
+    if (pd) {
+      c.currentPrice = pd.usd;
+      c.currentPriceSgd = pd.sgd;
+      c.change24h = pd.usd_24h_change;
+    }
+  }
+
+  state.settings.lastUpdated = new Date().toISOString();
+  // Snapshot BEFORE re-reading from storage (we need current prices in state)
+  const today = new Date().toISOString().split('T')[0];
+  const t = calcTotals();
+  const snapIdx = state.snapshots.findIndex(s => s.date === today);
+  if (snapIdx >= 0) state.snapshots[snapIdx].value = t.totalVal;
+  else state.snapshots.push({ date: today, value: t.totalVal });
+  if (state.snapshots.length > 730) state.snapshots = state.snapshots.slice(-730);
+  save(state);
+  btn.disabled = false;
+  icon.className = '';
+  icon.textContent = '↻';
+  toast('Prices refreshed!', 'success');
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ══════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════
+function renderAll() {
+  state = getData();
+  updateTabBadges();
+  updateLastUpdated();
+  renderOverview();
+  renderStocks();
+  renderCrypto();
+  renderMutual();
+  renderRealEstate();
+  renderCpf();
+  syncSettings();
+}
+
+function updateTabBadges() {
+  document.getElementById('badge-stocks').textContent = state.stocks.length;
+  document.getElementById('badge-crypto').textContent = state.crypto.length;
+  document.getElementById('badge-mutual').textContent = state.mutualFunds.length;
+  document.getElementById('badge-realestate').textContent = state.realEstate.length;
+}
+
+function updateLastUpdated() {
+  const el = document.getElementById('lastUpdated');
+  if (state.settings.lastUpdated) {
+    const d = new Date(state.settings.lastUpdated);
+    el.textContent = 'Updated ' + d.toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ── OVERVIEW ──
+function calcTotals() {
+  let stockVal = 0, cryptoVal = 0, mutualVal = 0, reVal = 0, cpfVal = 0, cpfInvVal = 0;
+  let stockCost = 0, cryptoCost = 0, mutualCost = 0;
+
+  for (const s of state.stocks) {
+    const cost = toDisplay(s.shares * s.avgCost, s.currency);
+    stockCost += cost;
+    if (s.currentPrice) {
+      stockVal += toDisplay(s.shares * s.currentPrice, s.priceCurrency || s.currency);
+    } else {
+      stockVal += cost;
+    }
+  }
+  for (const c of state.crypto) {
+    const cost = toDisplay(c.amount * c.avgCost, 'USD');
+    cryptoCost += cost;
+    if (c.currentPrice) {
+      cryptoVal += toDisplay(c.amount * c.currentPrice, 'USD');
+    } else {
+      cryptoVal += cost;
+    }
+  }
+  for (const f of state.mutualFunds) {
+    const cost = toDisplay(f.units * f.avgNav, f.currency || 'SGD');
+    mutualCost += cost;
+    const nav = f.currentNav || f.avgNav;
+    mutualVal += toDisplay(f.units * nav, f.currency || 'SGD');
+  }
+  for (const p of state.realEstate) {
+    reVal += toDisplay(p.currentValue * ((p.ownership||100)/100), p.currency || 'SGD');
+  }
+  const cpf = state.cpf;
+  cpfVal = toDisplay((cpf.oa||0) + (cpf.sa||0) + (cpf.ma||0) + (cpf.ra||0), 'SGD');
+  for (const inv of state.cpfInvestments) {
+    const nav = inv.currentPrice || inv.avgCost;
+    cpfInvVal += toDisplay(inv.units * nav, 'SGD');
+  }
+
+  const totalVal = stockVal + cryptoVal + mutualVal + reVal + cpfVal + cpfInvVal;
+  const totalCost = stockCost + cryptoCost + mutualCost;
+  const investedVal = stockVal + cryptoVal + mutualVal;
+  const totalPL = investedVal - totalCost;
+  const totalPLPct = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
+
+  return { totalVal, totalCost, totalPL, totalPLPct, stockVal, cryptoVal, mutualVal, reVal, cpfVal, cpfInvVal };
+}
+
+function renderOverview() {
+  const t = calcTotals();
+  // Summary cards
+  document.getElementById('overviewCards').innerHTML = `
+    <div class="card card-accent">
+      <div class="card-label">Total Portfolio</div>
+      <div class="card-value">${fmt(t.totalVal)}</div>
+      <div class="card-sub">Across all assets</div>
+    </div>
+    <div class="card ${t.totalPL >= 0 ? 'card-green' : 'card-red'}">
+      <div class="card-label">Total P&L</div>
+      <div class="card-value ${plClass(t.totalPL)}">${plSign(t.totalPL)}${fmt(t.totalPL)}</div>
+      <div class="card-sub ${plClass(t.totalPL)}">${fmtPct(t.totalPLPct)}</div>
+    </div>
+    <div class="card card-purple">
+      <div class="card-label">Invested Capital</div>
+      <div class="card-value">${fmt(t.totalCost)}</div>
+      <div class="card-sub">Stocks + Crypto + Funds</div>
+    </div>
+    <div class="card card-teal">
+      <div class="card-label">CPF Balance</div>
+      <div class="card-value">${fmt(t.cpfVal)}</div>
+      <div class="card-sub">OA + SA + MA + RA</div>
+    </div>
+    <div class="card card-orange">
+      <div class="card-label">Real Estate</div>
+      <div class="card-value">${fmt(t.reVal)}</div>
+      <div class="card-sub">My share at current value</div>
+    </div>
+  `;
+  renderAllocChart(t);
+  renderPerfChart();
+  renderTopHoldings(t);
+}
+
+function renderAllocChart(t) {
+  const labels = [], data = [], colors = [];
+  const cats = [
+    { label: 'Stocks/ETFs', val: t.stockVal, color: '#3b82f6' },
+    { label: 'Crypto', val: t.cryptoVal, color: '#a855f7' },
+    { label: 'Mutual Funds', val: t.mutualVal, color: '#22c55e' },
+    { label: 'Real Estate', val: t.reVal, color: '#f59e0b' },
+    { label: 'CPF', val: t.cpfVal + t.cpfInvVal, color: '#14b8a6' },
+  ].filter(c => c.val > 0);
+
+  cats.forEach(c => { labels.push(c.label); data.push(c.val); colors.push(c.color); });
+
+  const ctx = document.getElementById('allocChart').getContext('2d');
+  if (allocChart) allocChart.destroy();
+  if (!data.length) { allocChart = null; return; }
+
+  allocChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#131f35', borderWidth: 3, hoverOffset: 6 }] },
+    options: {
+      cutout: '68%', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed;
+              const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+              return ` ${fmt(v)}  (${((v/total)*100).toFixed(1)}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Custom legend
+  const total = data.reduce((a,b)=>a+b,0);
+  document.getElementById('allocLegend').innerHTML = cats.map(c =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${c.color}"></div><span>${c.label} <strong>${((c.val/total)*100).toFixed(0)}%</strong></span></div>`
+  ).join('');
+}
+
+function renderPerfChart() {
+  const ctx = document.getElementById('perfChart').getContext('2d');
+  if (perfChart) perfChart.destroy();
+
+  let snaps = [...state.snapshots];
+  if (perfRange > 0) {
+    const cutoff = Date.now() - perfRange * 86400000;
+    snaps = snaps.filter(s => new Date(s.date).getTime() >= cutoff);
+  }
+
+  if (snaps.length < 2) {
+    perfChart = new Chart(ctx, {
+      type: 'line', data: { labels: ['No data'], datasets: [{ data: [0], borderColor: '#3b82f6' }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#5a7aaa' }, grid: { color: '#1a2942' } }, x: { ticks: { color: '#5a7aaa' }, grid: { color: '#1a2942' } } } }
+    });
+    return;
+  }
+
+  const labels = snaps.map(s => new Date(s.date).toLocaleDateString('en-SG',{month:'short',day:'numeric'}));
+  const data = snaps.map(s => s.value);
+  const isUp = data[data.length-1] >= data[0];
+
+  perfChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Portfolio Value', data, borderColor: isUp ? '#22c55e' : '#ef4444', backgroundColor: isUp ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', fill: true, tension: 0.3, pointRadius: snaps.length < 15 ? 4 : 0, pointHoverRadius: 6, borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + fmt(c.parsed.y) } } },
+      scales: {
+        y: { ticks: { color: '#5a7aaa', callback: v => sym(ccy()) + (v/1000).toFixed(0) + 'k' }, grid: { color: '#1a2942' } },
+        x: { ticks: { color: '#5a7aaa', maxTicksLimit: 8 }, grid: { color: '#1a2942' } }
+      }
+    }
+  });
+}
+
+function renderTopHoldings(t) {
+  const holdings = [];
+  let idx = 0;
+
+  state.stocks.forEach((s,i) => {
+    const val = s.currentPrice ? toDisplay(s.shares * s.currentPrice, s.priceCurrency || s.currency) : toDisplay(s.shares * s.avgCost, s.currency);
+    holdings.push({ name: s.ticker, sub: s.name || 'Stock', val, color: COLORS[idx++%12] });
+  });
+  state.crypto.forEach((c,i) => {
+    const val = c.currentPrice ? toDisplay(c.amount * c.currentPrice, 'USD') : toDisplay(c.amount * c.avgCost, 'USD');
+    holdings.push({ name: c.symbol || c.coinId, sub: c.name || 'Crypto', val, color: COLORS[idx++%12] });
+  });
+  state.mutualFunds.forEach(f => {
+    const nav = f.currentNav || f.avgNav;
+    const val = toDisplay(f.units * nav, f.currency || 'SGD');
+    holdings.push({ name: f.name.substring(0,20), sub: f.fundHouse || 'Fund', val, color: COLORS[idx++%12] });
+  });
+  state.realEstate.forEach(p => {
+    holdings.push({ name: p.name.substring(0,20), sub: p.type || 'Property', val: toDisplay(p.currentValue * ((p.ownership||100)/100), p.currency || 'SGD'), color: COLORS[idx++%12] });
+  });
+
+  // CPF
+  const cpfTot = toDisplay((state.cpf.oa||0)+(state.cpf.sa||0)+(state.cpf.ma||0)+(state.cpf.ra||0), 'SGD');
+  if (cpfTot > 0) holdings.push({ name: 'CPF', sub: 'OA + SA + MA + RA', val: cpfTot, color: '#14b8a6' });
+
+  holdings.sort((a,b) => b.val - a.val);
+  const total = holdings.reduce((s,h) => s+h.val, 0);
+
+  document.getElementById('topHoldingsList').innerHTML = holdings.slice(0,10).map(h => `
+    <div class="breakdown-row">
+      <div class="breakdown-icon" style="background:${h.color}20;color:${h.color}">${initials(h.name)}</div>
+      <div class="breakdown-info">
+        <div class="breakdown-name">${h.name}</div>
+        <div class="breakdown-sub">${h.sub}</div>
+      </div>
+      <div class="breakdown-value">
+        <div class="breakdown-amount">${fmt(h.val)}</div>
+        <div class="breakdown-pct">${total > 0 ? ((h.val/total)*100).toFixed(1) : 0}%</div>
+      </div>
+    </div>
+  `).join('') || '<div class="empty-state"><div class="empty-msg">No holdings yet. Add assets to see them here.</div></div>';
+}
+
+// ── STOCKS ──
+function renderStocks() {
+  const body = document.getElementById('stocksBody');
+  if (!state.stocks.length) {
+    body.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📊</div><div class="empty-msg">No stocks yet. Click "Add Holding" to get started.</div></div></td></tr>`;
+    document.getElementById('stocksTfoot').innerHTML = '';
+    return;
+  }
+  let totVal = 0, totCost = 0;
+  body.innerHTML = state.stocks.map((s, i) => {
+    const cost = toDisplay(s.shares * s.avgCost, s.currency);
+    const price = s.currentPrice;
+    const val = price ? toDisplay(s.shares * price, s.priceCurrency || s.currency) : cost;
+    const pl = val - cost; const plPct = cost > 0 ? (pl/cost)*100 : 0;
+    totVal += val; totCost += cost;
+    return `<tr>
+      <td><div class="ticker-cell">
+        <div class="ticker-icon" style="background:${iconBg(i)}22;color:${iconBg(i)}">${initials(s.ticker)}</div>
+        <div><div style="font-weight:600">${s.ticker}</div><div class="ticker-name">${s.name||''}</div></div>
+      </div></td>
+      <td><span style="color:var(--text3)">${s.account||'—'}</span></td>
+      <td style="text-align:right">${(+s.shares).toLocaleString()}</td>
+      <td style="text-align:right">${fmt(toDisplay(s.avgCost,s.currency))}</td>
+      <td style="text-align:right">${price ? fmt(toDisplay(price, s.priceCurrency||s.currency)) : '<span class="price-loading">—</span>'}</td>
+      <td style="text-align:right" class="${s.dayChange!=null?plClass(s.dayChange):'na'}">${s.dayChange!=null?fmtPct(s.dayChange):'—'}</td>
+      <td style="text-align:right;font-weight:600">${fmt(val)}</td>
+      <td style="text-align:right" class="${plClass(pl)}">${plSign(pl)}${fmt(pl)}</td>
+      <td style="text-align:right" class="${plClass(plPct)}">${fmtPct(plPct)}</td>
+      <td><div class="act-btns">
+        <button class="btn btn-secondary btn-sm" onclick="editStock('${s.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('stocks','${s.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const totPL = totVal - totCost;
+  document.getElementById('stocksTfoot').innerHTML = `
+    <td colspan="6" style="font-weight:600">TOTAL (${state.stocks.length} holdings)</td>
+    <td style="text-align:right;font-weight:700">${fmt(totVal)}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${plSign(totPL)}${fmt(totPL)}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${totCost>0?fmtPct((totPL/totCost)*100):'—'}</td>
+    <td></td>`;
+}
+
+// ── CRYPTO ──
+function renderCrypto() {
+  const body = document.getElementById('cryptoBody');
+  if (!state.crypto.length) {
+    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">₿</div><div class="empty-msg">No crypto holdings yet.</div></div></td></tr>`;
+    document.getElementById('cryptoTfoot').innerHTML = '';
+    return;
+  }
+  let totVal = 0, totCost = 0;
+  body.innerHTML = state.crypto.map((c, i) => {
+    const cost = toDisplay(c.amount * c.avgCost, 'USD');
+    const price = c.currentPrice;
+    const val = price ? toDisplay(c.amount * price, 'USD') : cost;
+    const pl = val - cost; const plPct = cost > 0 ? (pl/cost)*100 : 0;
+    totVal += val; totCost += cost;
+    return `<tr>
+      <td><div class="ticker-cell">
+        <div class="ticker-icon" style="background:${iconBg(i+6)}22;color:${iconBg(i+6)}">${initials(c.symbol||c.coinId)}</div>
+        <div><div style="font-weight:600">${c.symbol||c.coinId.toUpperCase()}</div><div class="ticker-name">${c.name||c.coinId}</div></div>
+      </div></td>
+      <td style="text-align:right">${(+c.amount).toLocaleString('en-US',{maximumFractionDigits:6})}</td>
+      <td style="text-align:right">${fmt(toDisplay(c.avgCost,'USD'))}</td>
+      <td style="text-align:right">${price ? fmt(toDisplay(price,'USD')) : '<span class="price-loading">—</span>'}</td>
+      <td style="text-align:right" class="${c.change24h!=null?plClass(c.change24h):'na'}">${c.change24h!=null?fmtPct(c.change24h):'—'}</td>
+      <td style="text-align:right;font-weight:600">${fmt(val)}</td>
+      <td style="text-align:right" class="${plClass(pl)}">${plSign(pl)}${fmt(pl)}</td>
+      <td style="text-align:right" class="${plClass(plPct)}">${fmtPct(plPct)}</td>
+      <td><div class="act-btns">
+        <button class="btn btn-secondary btn-sm" onclick="editCrypto('${c.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('crypto','${c.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const totPL = totVal - totCost;
+  document.getElementById('cryptoTfoot').innerHTML = `
+    <td colspan="5" style="font-weight:600">TOTAL (${state.crypto.length} holdings)</td>
+    <td style="text-align:right;font-weight:700">${fmt(totVal)}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${plSign(totPL)}${fmt(totPL)}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${totCost>0?fmtPct((totPL/totCost)*100):'—'}</td>
+    <td></td>`;
+}
+
+// ── MUTUAL FUNDS ──
+function renderMutual() {
+  const body = document.getElementById('mutualBody');
+  if (!state.mutualFunds.length) {
+    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📑</div><div class="empty-msg">No mutual fund holdings yet.</div></div></td></tr>`;
+    document.getElementById('mutualTfoot').innerHTML = '';
+    return;
+  }
+  let totVal = 0, totCost = 0;
+  body.innerHTML = state.mutualFunds.map((f, i) => {
+    const nav = f.currentNav || f.avgNav;
+    const cost = toDisplay(f.units * f.avgNav, f.currency||'SGD');
+    const val = toDisplay(f.units * nav, f.currency||'SGD');
+    const pl = val - cost; const plPct = cost > 0 ? (pl/cost)*100 : 0;
+    totVal += val; totCost += cost;
+    return `<tr>
+      <td><div class="ticker-cell">
+        <div class="ticker-icon" style="background:${iconBg(i+3)}22;color:${iconBg(i+3)}">${initials(f.name)}</div>
+        <div><div style="font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
+             <div class="ticker-name">${f.ticker||''}</div></div>
+      </div></td>
+      <td>${f.fundHouse||'—'}</td>
+      <td style="text-align:right">${(+f.units).toLocaleString()}</td>
+      <td style="text-align:right">${fmt(toDisplay(f.avgNav, f.currency||'SGD'))}</td>
+      <td style="text-align:right">${nav !== f.avgNav ? fmt(toDisplay(nav,f.currency||'SGD')) : '<span class="na">Manual</span>'}</td>
+      <td style="text-align:right;font-weight:600">${fmt(val)}</td>
+      <td style="text-align:right" class="${plClass(pl)}">${plSign(pl)}${fmt(pl)}</td>
+      <td style="text-align:right" class="${plClass(plPct)}">${fmtPct(plPct)}</td>
+      <td><div class="act-btns">
+        <button class="btn btn-secondary btn-sm" onclick="editMutual('${f.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('mutualFunds','${f.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const totPL = totVal - totCost;
+  document.getElementById('mutualTfoot').innerHTML = `
+    <td colspan="5" style="font-weight:600">TOTAL (${state.mutualFunds.length} funds)</td>
+    <td style="text-align:right;font-weight:700">${fmt(totVal)}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${plSign(totPL)}${fmt(totPL)}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${totCost>0?fmtPct((totPL/totCost)*100):'—'}</td>
+    <td></td>`;
+}
+
+// ── REAL ESTATE ──
+function renderRealEstate() {
+  const body = document.getElementById('reBody');
+  if (!state.realEstate.length) {
+    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🏠</div><div class="empty-msg">No property holdings yet.</div></div></td></tr>`;
+    document.getElementById('reTfoot').innerHTML = '';
+    return;
+  }
+  let totMyShare = 0, totCost = 0, totGain = 0;
+  body.innerHTML = state.realEstate.map((p, i) => {
+    const own = (p.ownership||100)/100;
+    const myShare = toDisplay(p.currentValue * own, p.currency||'SGD');
+    const cost = toDisplay(p.purchasePrice * own, p.currency||'SGD');
+    const gain = myShare - cost;
+    totMyShare += myShare; totCost += cost; totGain += gain;
+    return `<tr>
+      <td><div class="ticker-cell">
+        <div class="ticker-icon" style="background:#f59e0b22;color:#f59e0b">🏠</div>
+        <div style="font-weight:600">${p.name}</div>
+      </div></td>
+      <td><span style="color:var(--text3)">${p.type||'—'}</span></td>
+      <td>${p.location||'—'}</td>
+      <td style="text-align:right">${fmt(toDisplay(p.purchasePrice*own, p.currency||'SGD'))}</td>
+      <td style="text-align:right;font-weight:600">${fmt(toDisplay(p.currentValue, p.currency||'SGD'))}</td>
+      <td style="text-align:right">${(p.ownership||100).toFixed(0)}%</td>
+      <td style="text-align:right;font-weight:600">${fmt(myShare)}</td>
+      <td style="text-align:right" class="${plClass(gain)}">${plSign(gain)}${fmt(gain)}</td>
+      <td><div class="act-btns">
+        <button class="btn btn-secondary btn-sm" onclick="editRE('${p.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('realEstate','${p.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('reTfoot').innerHTML = `
+    <td colspan="6" style="font-weight:600">TOTAL (${state.realEstate.length} properties)</td>
+    <td style="text-align:right;font-weight:700">${fmt(totMyShare)}</td>
+    <td style="text-align:right" class="${plClass(totGain)}">${plSign(totGain)}${fmt(totGain)}</td>
+    <td></td>`;
+}
+
+// ── CPF ──
+function renderCpf() {
+  const cpf = state.cpf;
+  const accounts = [
+    { key:'oa', label:'Ordinary Account', badge:'OA', rate:'2.5% p.a.', color:'#3b82f6', note:'For housing, insurance, investment' },
+    { key:'sa', label:'Special Account', badge:'SA', rate:'4.0% p.a.', color:'#a855f7', note:'For retirement' },
+    { key:'ma', label:'MediSave Account', badge:'MA', rate:'4.0% p.a.', color:'#22c55e', note:'For medical expenses' },
+    { key:'ra', label:'Retirement Account', badge:'RA', rate:'4.0% p.a.', color:'#f59e0b', note:'From age 55' },
+  ];
+  document.getElementById('cpfGrid').innerHTML = accounts.map(a => `
+    <div class="cpf-card" style="border-left:3px solid ${a.color}">
+      <div class="cpf-card-header">
+        <div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:4px">${a.label}</div>
+          <div class="cpf-amount" style="color:${a.color}">${fmt(toDisplay(cpf[a.key]||0,'SGD'))}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cpf-badge">${a.badge}</div>
+          <div class="cpf-rate" style="margin-top:6px">+${a.rate}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">${a.note}</div>
+      <div class="cpf-edit-wrap">
+        <input class="cpf-input" type="number" value="${cpf[a.key]||0}" min="0" step="100" placeholder="0" onchange="updateCpf('${a.key}',+this.value)">
+      </div>
+    </div>
+  `).join('');
+
+  // CPF Investments
+  const body = document.getElementById('cpfInvBody');
+  if (!state.cpfInvestments.length) {
+    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📈</div><div class="empty-msg">No CPF investments yet. You can invest your OA/SA funds in approved stocks and ETFs.</div></div></td></tr>`;
+    document.getElementById('cpfInvTfoot').innerHTML = '';
+    return;
+  }
+  let totVal = 0, totCost = 0;
+  body.innerHTML = state.cpfInvestments.map((s, i) => {
+    const cost = s.units * s.avgCost;
+    const price = s.currentPrice || s.avgCost;
+    const val = s.units * price;
+    const pl = val - cost; const plPct = cost > 0 ? (pl/cost)*100 : 0;
+    totVal += val; totCost += cost;
+    return `<tr>
+      <td><div class="ticker-cell">
+        <div class="ticker-icon" style="background:#14b8a622;color:#14b8a6">${initials(s.ticker)}</div>
+        <div><div style="font-weight:600">${s.ticker}</div><div class="ticker-name">${s.name||''}</div></div>
+      </div></td>
+      <td><span style="color:var(--text3)">${s.account||'OA'}</span></td>
+      <td style="text-align:right">${(+s.units).toLocaleString()}</td>
+      <td style="text-align:right">${fmt(toDisplay(s.avgCost,'SGD'))}</td>
+      <td style="text-align:right">${s.currentPrice ? fmt(toDisplay(s.currentPrice,'SGD')) : '<span class="price-loading">—</span>'}</td>
+      <td style="text-align:right;font-weight:600">${fmt(toDisplay(val,'SGD'))}</td>
+      <td style="text-align:right" class="${plClass(pl)}">${plSign(pl)}${fmt(toDisplay(pl,'SGD'))}</td>
+      <td style="text-align:right" class="${plClass(plPct)}">${fmtPct(plPct)}</td>
+      <td><div class="act-btns">
+        <button class="btn btn-secondary btn-sm" onclick="editCpfInv('${s.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('cpfInvestments','${s.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const totPL = totVal - totCost;
+  document.getElementById('cpfInvTfoot').innerHTML = `
+    <td colspan="5" style="font-weight:600">TOTAL</td>
+    <td style="text-align:right;font-weight:700">${fmt(toDisplay(totVal,'SGD'))}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${plSign(totPL)}${fmt(toDisplay(totPL,'SGD'))}</td>
+    <td style="text-align:right" class="${plClass(totPL)}">${totCost>0?fmtPct((totPL/totCost)*100):'—'}</td>
+    <td></td>`;
+}
+
+function updateCpf(key, val) {
+  state = getData();
+  state.cpf[key] = val;
+  save(state);
+  toast('CPF balance updated', 'success');
+}
+
+// ── SETTINGS SYNC ──
+function syncSettings() {
+  const s = state.settings;
+  const cc = document.getElementById('settingCurrency');
+  if (cc) cc.value = s.currency || 'SGD';
+  const rr = document.getElementById('settingRate');
+  if (rr) rr.value = (s.usdToSgd || 1.35).toFixed(4);
+  const nn = document.getElementById('settingName');
+  if (nn) nn.value = s.dashName || '';
+  if (s.dashName) document.title = s.dashName;
+}
+
+function saveSetting(key, val) {
+  state = getData();
+  state.settings[key] = val;
+  save(state);
+  if (key === 'dashName' && val) document.title = val;
+  toast('Setting saved', 'success');
+}
+
+async function autoFetchRate() {
+  toast('Fetching exchange rate…');
+  const r = await fetchExchangeRate();
+  if (r) {
+    state = getData();
+    state.settings.usdToSgd = r;
+    save(state);
+    toast(`Rate updated: 1 USD = ${r.toFixed(4)} SGD`, 'success');
+  } else {
+    toast('Failed to fetch rate', 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL CRUD
+// ══════════════════════════════════════════════════
+function openModal(type) {
+  document.getElementById(`modal-${type}`).classList.add('open');
+}
+function closeModal(type) {
+  document.getElementById(`modal-${type}`).classList.remove('open');
+  clearForm(type);
+}
+
+function clearForm(type) {
+  const m = document.getElementById(`modal-${type}`);
+  if (!m) return;
+  m.querySelectorAll('input[type=text],input[type=number],input[type=hidden]').forEach(el => el.value = '');
+  m.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+}
+
+// ── STOCK ──
+function saveStock() {
+  const ticker = document.getElementById('stockTicker').value.trim().toUpperCase();
+  const name = document.getElementById('stockName').value.trim();
+  const shares = parseFloat(document.getElementById('stockShares').value);
+  const avgCost = parseFloat(document.getElementById('stockAvgCost').value);
+  const currency = document.getElementById('stockCurrency').value;
+  const account = document.getElementById('stockAccount').value.trim();
+  const editId = document.getElementById('stockEditId').value;
+
+  if (!ticker || isNaN(shares) || isNaN(avgCost) || shares <= 0 || avgCost <= 0) {
+    toast('Please fill in all required fields', 'error'); return;
+  }
+  state = getData();
+  if (editId) {
+    const idx = state.stocks.findIndex(s => s.id === editId);
+    if (idx >= 0) state.stocks[idx] = { ...state.stocks[idx], ticker, name, shares, avgCost, currency, account };
+    toast('Holding updated', 'success');
+  } else {
+    state.stocks.push({ id: uid(), ticker, name, shares, avgCost, currency, account, currentPrice: null, dayChange: null });
+    toast('Holding added!', 'success');
+  }
+  save(state);
+  closeModal('stock');
+}
+
+function editStock(id) {
+  state = getData();
+  const s = state.stocks.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('stockModalTitle').textContent = 'Edit Stock / ETF';
+  document.getElementById('stockEditId').value = s.id;
+  document.getElementById('stockTicker').value = s.ticker;
+  document.getElementById('stockName').value = s.name||'';
+  document.getElementById('stockShares').value = s.shares;
+  document.getElementById('stockAvgCost').value = s.avgCost;
+  document.getElementById('stockCurrency').value = s.currency||'SGD';
+  document.getElementById('stockAccount').value = s.account||'';
+  openModal('stock');
+}
+
+// ── CRYPTO ──
+function saveCrypto() {
+  const coinId = document.getElementById('cryptoCoinId').value.trim().toLowerCase();
+  const symbol = document.getElementById('cryptoSymbol').value.trim().toUpperCase();
+  const name = document.getElementById('cryptoName').value.trim();
+  const amount = parseFloat(document.getElementById('cryptoAmount').value);
+  const avgCost = parseFloat(document.getElementById('cryptoAvgCost').value);
+  const editId = document.getElementById('cryptoEditId').value;
+
+  if (!coinId || isNaN(amount) || isNaN(avgCost) || amount <= 0 || avgCost <= 0) {
+    toast('Please fill in all required fields', 'error'); return;
+  }
+  state = getData();
+  if (editId) {
+    const idx = state.crypto.findIndex(c => c.id === editId);
+    if (idx >= 0) state.crypto[idx] = { ...state.crypto[idx], coinId, symbol, name, amount, avgCost };
+    toast('Holding updated', 'success');
+  } else {
+    state.crypto.push({ id: uid(), coinId, symbol, name, amount, avgCost, currentPrice: null, change24h: null });
+    toast('Crypto holding added!', 'success');
+  }
+  save(state);
+  closeModal('crypto');
+}
+
+function editCrypto(id) {
+  state = getData();
+  const c = state.crypto.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('cryptoModalTitle').textContent = 'Edit Crypto';
+  document.getElementById('cryptoEditId').value = c.id;
+  document.getElementById('cryptoCoinId').value = c.coinId;
+  document.getElementById('cryptoSymbol').value = c.symbol||'';
+  document.getElementById('cryptoName').value = c.name||'';
+  document.getElementById('cryptoAmount').value = c.amount;
+  document.getElementById('cryptoAvgCost').value = c.avgCost;
+  openModal('crypto');
+}
+
+// ── MUTUAL FUND ──
+function saveMutual() {
+  const name = document.getElementById('mutualName').value.trim();
+  const fundHouse = document.getElementById('mutualHouse').value.trim();
+  const ticker = document.getElementById('mutualTicker').value.trim().toUpperCase();
+  const units = parseFloat(document.getElementById('mutualUnits').value);
+  const avgNav = parseFloat(document.getElementById('mutualAvgNav').value);
+  const currentNav = parseFloat(document.getElementById('mutualCurrentNav').value) || null;
+  const currency = document.getElementById('mutualCurrency').value;
+  const editId = document.getElementById('mutualEditId').value;
+
+  if (!name || isNaN(units) || isNaN(avgNav) || units <= 0 || avgNav <= 0) {
+    toast('Please fill in all required fields', 'error'); return;
+  }
+  state = getData();
+  const entry = { id: uid(), name, fundHouse, ticker, units, avgNav, currentNav, currency };
+  if (editId) {
+    const idx = state.mutualFunds.findIndex(f => f.id === editId);
+    if (idx >= 0) state.mutualFunds[idx] = { ...state.mutualFunds[idx], ...entry, id: editId };
+    toast('Fund updated', 'success');
+  } else {
+    state.mutualFunds.push(entry);
+    toast('Fund added!', 'success');
+  }
+  save(state);
+  closeModal('mutual');
+}
+
+function editMutual(id) {
+  state = getData();
+  const f = state.mutualFunds.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('mutualModalTitle').textContent = 'Edit Fund';
+  document.getElementById('mutualEditId').value = f.id;
+  document.getElementById('mutualName').value = f.name;
+  document.getElementById('mutualHouse').value = f.fundHouse||'';
+  document.getElementById('mutualTicker').value = f.ticker||'';
+  document.getElementById('mutualUnits').value = f.units;
+  document.getElementById('mutualAvgNav').value = f.avgNav;
+  document.getElementById('mutualCurrentNav').value = f.currentNav||'';
+  document.getElementById('mutualCurrency').value = f.currency||'SGD';
+  openModal('mutual');
+}
+
+// ── REAL ESTATE ──
+function saveRealEstate() {
+  const name = document.getElementById('reName').value.trim();
+  const type = document.getElementById('reType').value;
+  const location = document.getElementById('reLocation').value.trim();
+  const purchasePrice = parseFloat(document.getElementById('rePurchasePrice').value);
+  const currentValue = parseFloat(document.getElementById('reCurrentValue').value);
+  const ownership = parseFloat(document.getElementById('reOwnership').value)||100;
+  const currency = document.getElementById('reCurrency').value;
+  const editId = document.getElementById('reEditId').value;
+
+  if (!name || isNaN(purchasePrice) || isNaN(currentValue)) {
+    toast('Please fill in all required fields', 'error'); return;
+  }
+  state = getData();
+  const entry = { id: uid(), name, type, location, purchasePrice, currentValue, ownership, currency };
+  if (editId) {
+    const idx = state.realEstate.findIndex(p => p.id === editId);
+    if (idx >= 0) state.realEstate[idx] = { ...entry, id: editId };
+    toast('Property updated', 'success');
+  } else {
+    state.realEstate.push(entry);
+    toast('Property added!', 'success');
+  }
+  save(state);
+  closeModal('realestate');
+}
+
+function editRE(id) {
+  state = getData();
+  const p = state.realEstate.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('reModalTitle').textContent = 'Edit Property';
+  document.getElementById('reEditId').value = p.id;
+  document.getElementById('reName').value = p.name;
+  document.getElementById('reType').value = p.type||'HDB';
+  document.getElementById('reLocation').value = p.location||'';
+  document.getElementById('rePurchasePrice').value = p.purchasePrice;
+  document.getElementById('reCurrentValue').value = p.currentValue;
+  document.getElementById('reOwnership').value = p.ownership||100;
+  document.getElementById('reCurrency').value = p.currency||'SGD';
+  openModal('realestate');
+}
+
+// ── CPF INVESTMENT ──
+function saveCpfInv() {
+  const ticker = document.getElementById('cpfInvTicker').value.trim().toUpperCase();
+  const name = document.getElementById('cpfInvName').value.trim();
+  const account = document.getElementById('cpfInvAccount').value;
+  const units = parseFloat(document.getElementById('cpfInvUnits').value);
+  const avgCost = parseFloat(document.getElementById('cpfInvAvgCost').value);
+  const editId = document.getElementById('cpfInvEditId').value;
+
+  if (!ticker || isNaN(units) || isNaN(avgCost)) {
+    toast('Please fill in all required fields', 'error'); return;
+  }
+  state = getData();
+  const entry = { id: uid(), ticker, name, account, units, avgCost, currentPrice: null, dayChange: null };
+  if (editId) {
+    const idx = state.cpfInvestments.findIndex(x => x.id === editId);
+    if (idx >= 0) state.cpfInvestments[idx] = { ...entry, id: editId };
+    toast('CPF investment updated', 'success');
+  } else {
+    state.cpfInvestments.push(entry);
+    toast('CPF investment added!', 'success');
+  }
+  save(state);
+  closeModal('cpfinv');
+}
+
+function editCpfInv(id) {
+  state = getData();
+  const s = state.cpfInvestments.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('cpfInvModalTitle').textContent = 'Edit CPF Investment';
+  document.getElementById('cpfInvEditId').value = s.id;
+  document.getElementById('cpfInvTicker').value = s.ticker;
+  document.getElementById('cpfInvName').value = s.name||'';
+  document.getElementById('cpfInvAccount').value = s.account||'OA';
+  document.getElementById('cpfInvUnits').value = s.units;
+  document.getElementById('cpfInvAvgCost').value = s.avgCost;
+  openModal('cpfinv');
+}
+
+// ── GENERIC DELETE ──
+function deleteItem(collection, id) {
+  if (!confirm('Delete this holding?')) return;
+  state = getData();
+  state[collection] = state[collection].filter(x => x.id !== id);
+  save(state);
+  toast('Deleted', 'success');
+}
+
+// ══════════════════════════════════════════════════
+//  SNAPSHOTS & PERFORMANCE
+// ══════════════════════════════════════════════════
+function takeSnapshot(silent=false) {
+  state = getData(); // ensure state is fresh when called manually
+  const t = calcTotals();
+  const today = new Date().toISOString().split('T')[0];
+  const existing = state.snapshots.findIndex(s => s.date === today);
+  if (existing >= 0) {
+    state.snapshots[existing].value = t.totalVal;
+  } else {
+    state.snapshots.push({ date: today, value: t.totalVal });
+  }
+  if (state.snapshots.length > 730) state.snapshots = state.snapshots.slice(-730);
+  save(state);
+  if (!silent) toast('Snapshot saved!', 'success');
+}
+
+function setRange(days, btn) {
+  perfRange = days;
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPerfChart();
+}
+
+// ══════════════════════════════════════════════════
+//  IMPORT / EXPORT
+// ══════════════════════════════════════════════════
+function exportData() {
+  const d = getData();
+  const blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `portfolio_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  toast('Exported successfully', 'success');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (!d.stocks && !d.crypto) throw new Error('Invalid format');
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+      state = getData();
+      renderAll();
+      toast('Data imported!', 'success');
+    } catch(err) {
+      toast('Import failed: invalid file', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function importCSV(type) {
+  // Simple CSV import for stocks: ticker,name,shares,avgCost,currency,account
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const lines = ev.target.result.split('\n').filter(l => l.trim());
+      const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+      state = getData();
+      let added = 0;
+      for (let i=1; i<lines.length; i++) {
+        const cols = lines[i].split(',');
+        const row = {};
+        headers.forEach((h,j) => row[h] = cols[j]?.trim()||'');
+        if (type === 'stocks' && row.ticker) {
+          state.stocks.push({ id: uid(), ticker: row.ticker.toUpperCase(), name: row.name||'', shares: +row.shares||0, avgCost: +row.avgcost||0, currency: row.currency||'SGD', account: row.account||'', currentPrice: null });
+          added++;
+        }
+      }
+      save(state);
+      toast(`Imported ${added} holdings`, 'success');
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function clearAllData() {
+  if (!confirm('This will delete ALL your portfolio data. Are you sure?')) return;
+  if (!confirm('Final confirmation: Delete everything?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = getData();
+  renderAll();
+  toast('All data cleared', 'success');
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+function showTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const tabEl = document.querySelector(`.tab[data-tab="${tab}"]`);
+  if (tabEl) tabEl.classList.add('active');
+  const panelEl = document.getElementById(`panel-${tab}`);
+  if (panelEl) panelEl.classList.add('active');
+  if (tab === 'overview') renderPerfChart();
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', (e) => {
+    if (e.target === ov) {
+      const id = ov.id.replace('modal-', '');
+      closeModal(id);
+    }
+  });
+});
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  state = getData();
+  renderAll();
+  // Auto-refresh on load
+  setTimeout(() => refreshAllPrices(), 1200);
+});
+</script>
+</body>
+</html>
