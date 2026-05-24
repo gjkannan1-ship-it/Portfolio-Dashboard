@@ -199,14 +199,25 @@
 
     /* ── OVERVIEW HOLDINGS TABLE ── */
     .top-holdings { margin-top: 0; }
-    .breakdown-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(46,68,112,0.3); }
+    /* Category heading row */
+    .holding-category { margin-bottom: 2px; }
+    .holding-cat-header { display: flex; align-items: center; gap: 10px; padding: 10px 0 6px; border-bottom: 2px solid rgba(46,68,112,0.5); cursor: pointer; user-select: none; }
+    .holding-cat-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .holding-cat-name { font-size: 13px; font-weight: 700; letter-spacing: 0.03em; flex: 1; }
+    .holding-cat-total { font-size: 13px; font-weight: 700; }
+    .holding-cat-pct { font-size: 11px; color: var(--text3); text-align: right; min-width: 38px; }
+    .holding-cat-chevron { font-size: 11px; color: var(--text3); transition: transform 0.2s; margin-left: 4px; }
+    .holding-cat-chevron.collapsed { transform: rotate(-90deg); }
+    /* Sub-item rows */
+    .holding-sub-list { overflow: hidden; transition: max-height 0.25s ease; }
+    .breakdown-row { display: flex; align-items: center; gap: 10px; padding: 7px 0 7px 12px; border-bottom: 1px solid rgba(46,68,112,0.2); }
     .breakdown-row:last-child { border-bottom: none; }
-    .breakdown-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .breakdown-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
     .breakdown-info { flex: 1; min-width: 0; }
-    .breakdown-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .breakdown-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .breakdown-sub { font-size: 11px; color: var(--text3); }
     .breakdown-value { text-align: right; flex-shrink: 0; }
-    .breakdown-amount { font-size: 13px; font-weight: 600; }
+    .breakdown-amount { font-size: 12px; font-weight: 600; }
     .breakdown-pct { font-size: 11px; color: var(--text3); }
 
     /* ── RESPONSIVE ── */
@@ -1597,10 +1608,10 @@ function renderOverview() {
       <div class="card-value">${fmt(t.reVal)}</div>
       <div class="card-sub">My share at current value</div>
     </div>
-    ${t.customVal > 0 ? `
-    <div class="card" style="border-left:3px solid #ec4899">
+    ${(state.customCategories||[]).length > 0 ? `
+    <div class="card" style="border-left:3px solid #ec4899;cursor:pointer" onclick="showTab('custom')" title="Click to manage custom assets">
       <div class="card-label">Custom Assets</div>
-      <div class="card-value">${fmt(t.customVal)}</div>
+      <div class="card-value" style="font-size:${t.customVal>0?'24px':'18px'}">${t.customVal > 0 ? fmt(t.customVal) : '<span style="color:var(--text3);font-size:13px">Add holdings →</span>'}</div>
       <div class="card-sub">${(state.customCategories||[]).length} categor${(state.customCategories||[]).length===1?'y':'ies'} · ${(state.customHoldings||[]).length} holding${(state.customHoldings||[]).length!==1?'s':''}</div>
     </div>` : ''}
   `;
@@ -1700,59 +1711,126 @@ function renderPerfChart() {
 }
 
 function renderTopHoldings(t) {
-  const holdings = [];
-  let idx = 0;
+  // Build category groups
+  const groups = [];
+  let colorIdx = 0;
 
-  state.stocks.forEach((s,i) => {
+  // ── Stocks / ETFs ──
+  const stockItems = state.stocks.map((s, i) => {
     const val = s.currentPrice ? toDisplay(s.shares * s.currentPrice, s.priceCurrency || s.currency) : toDisplay(s.shares * s.avgCost, s.currency);
-    holdings.push({ name: s.ticker, sub: s.name || 'Stock', val, color: COLORS[idx++%12] });
-  });
-  state.crypto.forEach((c,i) => {
+    return { name: s.ticker, sub: s.name || 'Stock/ETF', val, color: COLORS[colorIdx++%12] };
+  }).sort((a,b) => b.val - a.val);
+  if (stockItems.length) groups.push({ label: 'Stocks / ETFs', icon: '📊', color: '#3b82f6', items: stockItems });
+
+  // ── Crypto ──
+  const cryptoItems = state.crypto.map((c, i) => {
     const val = c.currentPrice ? toDisplay(c.amount * c.currentPrice, 'USD') : toDisplay(c.amount * c.avgCost, 'USD');
-    holdings.push({ name: c.symbol || c.coinId, sub: c.name || 'Crypto', val, color: COLORS[idx++%12] });
-  });
-  state.mutualFunds.forEach(f => {
+    return { name: c.symbol || c.coinId, sub: c.name || 'Crypto', val, color: COLORS[colorIdx++%12] };
+  }).sort((a,b) => b.val - a.val);
+  if (cryptoItems.length) groups.push({ label: 'Crypto', icon: '₿', color: '#a855f7', items: cryptoItems });
+
+  // ── Mutual Funds (SGD/other) ──
+  const mfItems = state.mutualFunds.map(f => {
     const nav = f.currentNav || f.avgNav;
     const val = toDisplay(f.units * nav, f.currency || 'SGD');
-    holdings.push({ name: f.name.substring(0,20), sub: f.fundHouse || 'Fund', val, color: COLORS[idx++%12] });
-  });
-  state.indiaMf.forEach(f => {
+    return { name: f.name.substring(0,22), sub: f.fundHouse || 'Fund', val, color: COLORS[colorIdx++%12] };
+  }).sort((a,b) => b.val - a.val);
+  if (mfItems.length) groups.push({ label: 'Mutual Funds', icon: '📑', color: '#22c55e', items: mfItems });
+
+  // ── India Mutual Funds ──
+  const indiaMfItems = state.indiaMf.map(f => {
     const nav = f.currentNav || f.avgNav;
     const val = toDisplay(f.units * nav, 'INR');
-    holdings.push({ name: f.name.substring(0,20), sub: (f.amc||'India MF') + ' · ' + (f.category||''), val, color: '#f97316' });
-  });
-  state.realEstate.forEach(p => {
-    holdings.push({ name: p.name.substring(0,20), sub: p.type || 'Property', val: toDisplay(p.currentValue * ((p.ownership||100)/100), p.currency || 'SGD'), color: COLORS[idx++%12] });
-  });
+    return { name: f.name.substring(0,22), sub: (f.amc||'India MF') + (f.category ? ' · ' + f.category : ''), val, color: '#f97316' };
+  }).sort((a,b) => b.val - a.val);
+  if (indiaMfItems.length) groups.push({ label: 'India Mutual Funds', icon: '🇮🇳', color: '#f97316', items: indiaMfItems });
 
-  // Custom assets — group by category
-  (state.customCategories||[]).forEach(cat => {
-    const val = (state.customHoldings||[])
-      .filter(h => h.categoryId === cat.id)
-      .reduce((s, h) => s + toDisplay(h.currentValue||0, h.currency||'SGD'), 0);
-    if (val > 0) holdings.push({ name: cat.name, sub: 'Custom · ' + (state.customHoldings||[]).filter(h=>h.categoryId===cat.id).length + ' holding(s)', val, color: cat.color });
-  });
+  // ── Real Estate ──
+  const reItems = state.realEstate.map(p => ({
+    name: p.name.substring(0,22), sub: p.type || 'Property',
+    val: toDisplay(p.currentValue * ((p.ownership||100)/100), p.currency || 'SGD'),
+    color: COLORS[colorIdx++%12]
+  })).sort((a,b) => b.val - a.val);
+  if (reItems.length) groups.push({ label: 'Real Estate', icon: '🏠', color: '#ec4899', items: reItems });
 
-  // CPF
+  // ── CPF ──
   const cpfTot = toDisplay((state.cpf.oa||0)+(state.cpf.sa||0)+(state.cpf.ma||0)+(state.cpf.ra||0), 'SGD');
-  if (cpfTot > 0) holdings.push({ name: 'CPF', sub: 'OA + SA + MA + RA', val: cpfTot, color: '#14b8a6' });
+  if (cpfTot > 0) groups.push({
+    label: 'CPF', icon: '🏦', color: '#14b8a6',
+    items: [
+      { name: 'OA', sub: 'Ordinary Account', val: toDisplay(state.cpf.oa||0,'SGD'), color: '#14b8a6' },
+      { name: 'SA', sub: 'Special Account',  val: toDisplay(state.cpf.sa||0,'SGD'), color: '#0d9488' },
+      { name: 'MA', sub: 'Medisave Account', val: toDisplay(state.cpf.ma||0,'SGD'), color: '#0f766e' },
+      { name: 'RA', sub: 'Retirement Account',val: toDisplay(state.cpf.ra||0,'SGD'), color: '#115e59' },
+    ].filter(x => x.val > 0)
+  });
 
-  holdings.sort((a,b) => b.val - a.val);
-  const total = holdings.reduce((s,h) => s+h.val, 0);
+  // ── Custom Categories ──
+  (state.customCategories||[]).forEach(cat => {
+    const catHoldings = (state.customHoldings||[]).filter(h => h.categoryId === cat.id);
+    const items = catHoldings.map(h => ({
+      name: h.name.substring(0,22),
+      sub: h.notes || cat.name,
+      val: toDisplay(h.currentValue||0, h.currency||'SGD'),
+      color: cat.color
+    })).sort((a,b) => b.val - a.val);
+    if (items.length) groups.push({ label: cat.name, icon: '📁', color: cat.color, items });
+  });
 
-  document.getElementById('topHoldingsList').innerHTML = holdings.slice(0,10).map(h => `
-    <div class="breakdown-row">
-      <div class="breakdown-icon" style="background:${h.color}20;color:${h.color}">${initials(h.name)}</div>
-      <div class="breakdown-info">
-        <div class="breakdown-name">${h.name}</div>
-        <div class="breakdown-sub">${h.sub}</div>
+  if (!groups.length) {
+    document.getElementById('topHoldingsList').innerHTML =
+      '<div class="empty-state"><div class="empty-msg">No holdings yet. Add assets to see them here.</div></div>';
+    return;
+  }
+
+  const grandTotal = groups.reduce((s, g) => s + g.items.reduce((ss, h) => ss + h.val, 0), 0);
+
+  document.getElementById('topHoldingsList').innerHTML = groups.map((g, gi) => {
+    const groupTotal = g.items.reduce((s, h) => s + h.val, 0);
+    const groupPct   = grandTotal > 0 ? ((groupTotal / grandTotal) * 100).toFixed(1) : '0.0';
+    const subRows = g.items.map(h => {
+      const itemPct = grandTotal > 0 ? ((h.val / grandTotal) * 100).toFixed(1) : '0.0';
+      return `
+      <div class="breakdown-row">
+        <div class="breakdown-icon" style="background:${h.color}22;color:${h.color}">${initials(h.name)}</div>
+        <div class="breakdown-info">
+          <div class="breakdown-name">${h.name}</div>
+          <div class="breakdown-sub">${h.sub}</div>
+        </div>
+        <div class="breakdown-value">
+          <div class="breakdown-amount">${fmt(h.val)}</div>
+          <div class="breakdown-pct">${itemPct}%</div>
+        </div>
+      </div>`;
+    }).join('');
+    return `
+    <div class="holding-category">
+      <div class="holding-cat-header" onclick="toggleHoldingGroup(${gi})">
+        <div class="holding-cat-icon" style="background:${g.color}22;color:${g.color}">${g.icon}</div>
+        <div class="holding-cat-name">${g.label}</div>
+        <div class="holding-cat-total">${fmt(groupTotal)}</div>
+        <div class="holding-cat-pct">${groupPct}%</div>
+        <div class="holding-cat-chevron" id="chevron-${gi}">▼</div>
       </div>
-      <div class="breakdown-value">
-        <div class="breakdown-amount">${fmt(h.val)}</div>
-        <div class="breakdown-pct">${total > 0 ? ((h.val/total)*100).toFixed(1) : 0}%</div>
-      </div>
-    </div>
-  `).join('') || '<div class="empty-state"><div class="empty-msg">No holdings yet. Add assets to see them here.</div></div>';
+      <div class="holding-sub-list" id="sublist-${gi}">${subRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleHoldingGroup(idx) {
+  const list = document.getElementById('sublist-' + idx);
+  const chev = document.getElementById('chevron-' + idx);
+  if (!list) return;
+  const isOpen = list.style.maxHeight !== '0px' && list.style.maxHeight !== '';
+  if (isOpen) {
+    list.style.maxHeight = '0px';
+    list.style.overflow = 'hidden';
+    chev && chev.classList.add('collapsed');
+  } else {
+    list.style.maxHeight = list.scrollHeight + 'px';
+    list.style.overflow = 'visible';
+    chev && chev.classList.remove('collapsed');
+  }
 }
 
 // ── STOCKS ──
@@ -1995,7 +2073,7 @@ function renderCustomAssets() {
     const plPct = totCost > 0 ? (pl / totCost) * 100 : 0;
 
     const rows = catHoldings.length ? catHoldings.map(h => {
-      const val  = toDisplay(h.currentValue || 0, h.currency || 'SGD');
+      const val  = toDisplay(h.currentValue || 0,  h.currency || 'SGD');
       const cost = toDisplay(h.costPrice || h.currentValue || 0, h.currency || 'SGD');
       const hpl  = val - cost;
       const hplPct = cost > 0 ? (hpl / cost) * 100 : 0;
@@ -2012,7 +2090,10 @@ function renderCustomAssets() {
           <button class="btn btn-danger btn-sm" onclick="deleteCustomHolding('${h.id}')">🗑</button>
         </div></td>
       </tr>`;
-    }).join('') : `<tr><td colspan="8"><div class="empty-state" style="padding:20px"><div class="empty-msg">No holdings yet in this category.</div></div></td></tr>`;
+    }).join('') : `<tr><td colspan="8"><div class="empty-state" style="padding:24px">
+        <div class="empty-icon">👆</div>
+        <div class="empty-msg" style="font-size:14px"><strong>No holdings yet.</strong><br>Click the <strong>"+ Add"</strong> button above to add your first holding under this category.</div>
+      </div></td></tr>`;
 
     return `<div class="cat-block">
       <div class="cat-header" style="border-left:4px solid ${cat.color}">
