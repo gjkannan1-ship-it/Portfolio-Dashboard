@@ -218,9 +218,124 @@
       .form-two { grid-template-columns: 1fr; }
       .modal { padding: 16px; }
     }
+
+    /* ── AUTH SCREEN ── */
+    #authScreen {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    #authScreen.hidden { display: none; }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      width: 100%; max-width: 400px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+    .auth-logo {
+      width: 56px; height: 56px; background: var(--accent);
+      border-radius: 16px; display: flex; align-items: center;
+      justify-content: center; font-size: 28px; margin: 0 auto 20px;
+    }
+    .auth-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .auth-sub { font-size: 13px; color: var(--text3); margin-bottom: 28px; }
+    .auth-input-wrap { position: relative; margin-bottom: 14px; }
+    .auth-input {
+      width: 100%; background: var(--surface2);
+      border: 1.5px solid var(--border); color: var(--text);
+      border-radius: 10px; padding: 13px 44px 13px 16px;
+      font-size: 15px; transition: border-color 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .auth-input:focus { outline: none; border-color: var(--accent); }
+    .auth-input.error { border-color: var(--red); animation: shake 0.35s; }
+    .auth-eye {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text3); cursor: pointer;
+      font-size: 16px; line-height: 1; padding: 4px;
+    }
+    .auth-eye:hover { color: var(--text); }
+    .auth-btn {
+      width: 100%; padding: 13px; border-radius: 10px; border: none;
+      background: var(--accent); color: #fff; font-size: 15px;
+      font-weight: 600; cursor: pointer; transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .auth-btn:hover { background: var(--accent-hover); }
+    .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .auth-error { color: var(--red); font-size: 13px; margin-top: 10px; min-height: 20px; }
+    .auth-footer { margin-top: 20px; font-size: 12px; color: var(--text3); }
+    .auth-strength { display: flex; gap: 4px; margin-top: 8px; }
+    .strength-bar { height: 4px; flex: 1; border-radius: 2px; background: var(--surface3); transition: background 0.3s; }
+    .strength-label { font-size: 11px; color: var(--text3); margin-top: 6px; text-align: left; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
   </style>
 </head>
 <body>
+
+<!-- ═══════════════════ AUTH SCREEN ═══════════════════ -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">📈</div>
+
+    <!-- LOGIN VIEW -->
+    <div id="authLogin">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Enter your password to access your portfolio</div>
+      <div class="auth-input-wrap">
+        <input class="auth-input" type="password" id="loginPassword" placeholder="Password"
+          onkeydown="if(event.key==='Enter')doLogin()" oninput="clearAuthError()">
+        <button class="auth-eye" onclick="toggleEye('loginPassword',this)" title="Show/hide">👁</button>
+      </div>
+      <div class="auth-error" id="loginError"></div>
+      <button class="auth-btn" onclick="doLogin()" id="loginBtn">Unlock Dashboard</button>
+      <div class="auth-footer">Forgot password? <a href="#" onclick="showForgot();return false">Reset</a></div>
+    </div>
+
+    <!-- SETUP VIEW (first time) -->
+    <div id="authSetup" style="display:none">
+      <div class="auth-title">Set your password</div>
+      <div class="auth-sub">Choose a password to protect your portfolio dashboard</div>
+      <div class="auth-input-wrap">
+        <input class="auth-input" type="password" id="setupPassword" placeholder="New password"
+          oninput="checkStrength(this.value)" onkeydown="if(event.key==='Enter')document.getElementById('setupConfirm').focus()">
+        <button class="auth-eye" onclick="toggleEye('setupPassword',this)" title="Show/hide">👁</button>
+      </div>
+      <div class="auth-strength">
+        <div class="strength-bar" id="sb1"></div>
+        <div class="strength-bar" id="sb2"></div>
+        <div class="strength-bar" id="sb3"></div>
+        <div class="strength-bar" id="sb4"></div>
+      </div>
+      <div class="strength-label" id="strengthLabel"></div>
+      <div class="auth-input-wrap" style="margin-top:12px">
+        <input class="auth-input" type="password" id="setupConfirm" placeholder="Confirm password"
+          onkeydown="if(event.key==='Enter')doSetup()" oninput="clearAuthError()">
+        <button class="auth-eye" onclick="toggleEye('setupConfirm',this)" title="Show/hide">👁</button>
+      </div>
+      <div class="auth-error" id="setupError"></div>
+      <button class="auth-btn" onclick="doSetup()">Set Password &amp; Enter</button>
+    </div>
+
+    <!-- FORGOT / RESET VIEW -->
+    <div id="authForgot" style="display:none">
+      <div class="auth-title">Reset password</div>
+      <div class="auth-sub">This will clear your stored password hash. Your portfolio data will remain intact.</div>
+      <button class="auth-btn" style="background:var(--red);margin-bottom:12px" onclick="doReset()">Yes, reset my password</button>
+      <button class="auth-btn" style="background:var(--surface3);color:var(--text2)" onclick="showLogin()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- HEADER -->
 <header>
@@ -234,6 +349,7 @@
       <span id="refreshIcon">↻</span> Refresh Prices
     </button>
     <button class="btn btn-secondary btn-icon" onclick="showTab('settings')" title="Settings">⚙️</button>
+    <button class="btn btn-secondary btn-icon" onclick="doLogout()" title="Lock dashboard">🔒</button>
   </div>
 </header>
 
@@ -468,6 +584,10 @@
       <div class="setting-row">
         <div><div class="setting-label">Take Snapshot</div><div class="setting-sub">Save today's portfolio value for performance tracking</div></div>
         <button class="btn btn-secondary btn-sm" onclick="takeSnapshot()">📸 Snapshot Now</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Change Password</div><div class="setting-sub">Update your dashboard lock password</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="showChangePassword()">🔑 Change</button>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Clear All Data</div><div class="setting-sub">Delete everything and start fresh</div></div>
@@ -722,10 +842,211 @@
   </div>
 </div>
 
+<!-- CHANGE PASSWORD MODAL -->
+<div class="overlay" id="modal-changepass">
+  <div class="modal">
+    <div class="modal-title">Change Password</div>
+    <button class="modal-close" onclick="closeModal('changepass')">✕</button>
+    <div class="form-row">
+      <label>Current Password</label>
+      <input type="password" id="cpCurrent" placeholder="Enter current password">
+    </div>
+    <div class="form-row">
+      <label>New Password</label>
+      <input type="password" id="cpNew" placeholder="New password" oninput="checkStrengthInline(this.value)">
+      <div class="auth-strength" style="margin-top:6px">
+        <div class="strength-bar" id="csb1"></div><div class="strength-bar" id="csb2"></div>
+        <div class="strength-bar" id="csb3"></div><div class="strength-bar" id="csb4"></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Confirm New Password</label>
+      <input type="password" id="cpConfirm" placeholder="Confirm new password">
+    </div>
+    <div class="auth-error" id="cpError" style="text-align:left;margin-bottom:8px"></div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('changepass')">Cancel</button>
+      <button class="btn btn-primary" onclick="doChangePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div id="toast"></div>
 
 <script>
+// ══════════════════════════════════════════════════
+//  AUTHENTICATION
+// ══════════════════════════════════════════════════
+const AUTH_KEY   = 'portfolio_auth_hash';
+const SESSION_KEY = 'portfolio_session';
+const SESSION_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function isSessionValid() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    return s && (Date.now() - s.ts) < SESSION_TTL;
+  } catch { return false; }
+}
+
+function setSession() {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ts: Date.now() }));
+}
+
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
+function unlockDashboard() {
+  document.getElementById('authScreen').classList.add('hidden');
+}
+
+function showLogin() {
+  document.getElementById('authLogin').style.display = '';
+  document.getElementById('authSetup').style.display = 'none';
+  document.getElementById('authForgot').style.display = 'none';
+  clearAuthError();
+}
+
+function showSetup() {
+  document.getElementById('authLogin').style.display = 'none';
+  document.getElementById('authSetup').style.display = '';
+  document.getElementById('authForgot').style.display = 'none';
+}
+
+function showForgot() {
+  document.getElementById('authLogin').style.display = 'none';
+  document.getElementById('authSetup').style.display = 'none';
+  document.getElementById('authForgot').style.display = '';
+}
+
+function clearAuthError() {
+  document.getElementById('loginError') && (document.getElementById('loginError').textContent = '');
+  document.getElementById('setupError') && (document.getElementById('setupError').textContent = '');
+}
+
+async function doLogin() {
+  const pw = document.getElementById('loginPassword').value;
+  if (!pw) { document.getElementById('loginError').textContent = 'Please enter your password.'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  const hash = await sha256(pw);
+  const stored = localStorage.getItem(AUTH_KEY);
+  if (hash === stored) {
+    setSession();
+    unlockDashboard();
+    document.getElementById('loginPassword').value = '';
+  } else {
+    const input = document.getElementById('loginPassword');
+    input.classList.add('error');
+    setTimeout(() => input.classList.remove('error'), 400);
+    document.getElementById('loginError').textContent = 'Incorrect password. Try again.';
+  }
+  btn.disabled = false; btn.textContent = 'Unlock Dashboard';
+}
+
+async function doSetup() {
+  const pw  = document.getElementById('setupPassword').value;
+  const pw2 = document.getElementById('setupConfirm').value;
+  if (pw.length < 6) { document.getElementById('setupError').textContent = 'Password must be at least 6 characters.'; return; }
+  if (pw !== pw2)    { document.getElementById('setupError').textContent = 'Passwords do not match.'; return; }
+  const hash = await sha256(pw);
+  localStorage.setItem(AUTH_KEY, hash);
+  setSession();
+  unlockDashboard();
+}
+
+function doReset() {
+  if (!confirm('Remove the current password? You will need to set a new one.')) return;
+  localStorage.removeItem(AUTH_KEY);
+  clearSession();
+  showSetup();
+}
+
+function doLogout() {
+  clearSession();
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('loginPassword').value = '';
+  showLogin();
+  toast('Dashboard locked 🔒');
+}
+
+function toggleEye(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+
+function passwordStrength(pw) {
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw) || /[^A-Za-z0-9]/.test(pw)) score++;
+  return score; // 0-4
+}
+
+function applyStrengthBars(score, prefix) {
+  const colors = ['', '#ef4444','#f59e0b','#3b82f6','#22c55e'];
+  const labels = ['','Weak','Fair','Good','Strong'];
+  for (let i=1; i<=4; i++) {
+    document.getElementById(prefix+i).style.background = i <= score ? colors[score] : 'var(--surface3)';
+  }
+  const lbl = document.getElementById('strengthLabel');
+  if (lbl) lbl.textContent = score > 0 ? labels[score] : '';
+}
+
+function checkStrength(pw) { applyStrengthBars(passwordStrength(pw), 'sb'); }
+function checkStrengthInline(pw) { applyStrengthBars(passwordStrength(pw), 'csb'); }
+
+// ── CHANGE PASSWORD ──
+function showChangePassword() {
+  document.getElementById('cpCurrent').value = '';
+  document.getElementById('cpNew').value = '';
+  document.getElementById('cpConfirm').value = '';
+  document.getElementById('cpError').textContent = '';
+  openModal('changepass');
+}
+
+async function doChangePassword() {
+  const cur    = document.getElementById('cpCurrent').value;
+  const newPw  = document.getElementById('cpNew').value;
+  const confPw = document.getElementById('cpConfirm').value;
+  const errEl  = document.getElementById('cpError');
+
+  if (!cur || !newPw || !confPw) { errEl.textContent = 'All fields are required.'; return; }
+  if (newPw.length < 6) { errEl.textContent = 'New password must be at least 6 characters.'; return; }
+  if (newPw !== confPw) { errEl.textContent = 'New passwords do not match.'; return; }
+
+  const curHash  = await sha256(cur);
+  const stored   = localStorage.getItem(AUTH_KEY);
+  if (curHash !== stored) { errEl.textContent = 'Current password is incorrect.'; return; }
+
+  const newHash = await sha256(newPw);
+  localStorage.setItem(AUTH_KEY, newHash);
+  closeModal('changepass');
+  toast('Password updated successfully!', 'success');
+}
+
+// ── INIT AUTH ──
+function initAuth() {
+  const hasPassword = !!localStorage.getItem(AUTH_KEY);
+  if (!hasPassword) {
+    showSetup();
+    return; // stay on auth screen for setup
+  }
+  if (isSessionValid()) {
+    unlockDashboard();
+    return;
+  }
+  showLogin();
+}
+
 // ══════════════════════════════════════════════════
 //  DATA LAYER
 // ══════════════════════════════════════════════════
@@ -1785,10 +2106,21 @@ document.querySelectorAll('.overlay').forEach(ov => {
 //  INIT
 // ══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  initAuth(); // show login or setup screen first
   state = getData();
   renderAll();
-  // Auto-refresh on load
-  setTimeout(() => refreshAllPrices(), 1200);
+  // Auto-refresh prices only after auth — wait for unlock
+  const observer = new MutationObserver(() => {
+    if (document.getElementById('authScreen').classList.contains('hidden')) {
+      observer.disconnect();
+      setTimeout(() => refreshAllPrices(), 800);
+    }
+  });
+  observer.observe(document.getElementById('authScreen'), { attributes: true, attributeFilter: ['class'] });
+  // If already unlocked (valid session), refresh now
+  if (document.getElementById('authScreen').classList.contains('hidden')) {
+    setTimeout(() => refreshAllPrices(), 800);
+  }
 });
 </script>
 </body>
