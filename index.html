@@ -2170,6 +2170,7 @@ function saveCategory() {
   }
   save(state);
   closeModal('newcategory');
+  renderAll();
   showTab('custom');
   toast(editId ? 'Category updated ✓' : `"${name}" category created! Now click "+ Add" inside it to add holdings.`, 'success');
 }
@@ -2203,6 +2204,7 @@ function deleteCategory(id) {
   state.customCategories = (state.customCategories||[]).filter(c => c.id !== id);
   state.customHoldings   = (state.customHoldings||[]).filter(h => h.categoryId !== id);
   save(state);
+  renderAll();
   toast('Category deleted', 'success');
 }
 
@@ -2246,7 +2248,8 @@ function saveCustomHolding() {
   }
   save(state);
   closeModal('customholding');
-  toast('Holding saved! Switch to Overview to see it in the chart.', 'success');
+  renderAll();
+  toast('Holding saved!', 'success');
 }
 
 function editCustomHolding(id) {
@@ -2271,6 +2274,7 @@ function deleteCustomHolding(id) {
   state = getData();
   state.customHoldings = (state.customHoldings||[]).filter(h => h.id !== id);
   save(state);
+  renderAll();
   toast('Deleted', 'success');
 }
 
