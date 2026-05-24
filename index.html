@@ -219,6 +219,22 @@
       .modal { padding: 16px; }
     }
 
+    /* ── CUSTOM ASSETS ── */
+    .cat-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; }
+    .cat-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .cat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .cat-title { font-size: 15px; font-weight: 700; }
+    .cat-subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .cat-header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .color-picker-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+    .color-swatch:hover { transform: scale(1.2); }
+    .color-swatch.selected { border-color: #fff; transform: scale(1.15); }
+    .icon-picker-wrap { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .icon-opt { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; background: var(--surface3); border: 2px solid transparent; transition: all 0.1s; }
+    .icon-opt:hover { background: var(--surface2); }
+    .icon-opt.selected { border-color: var(--accent); background: var(--surface2); }
+
     /* ── AUTH SCREEN ── */
     #authScreen {
       position: fixed; inset: 0; z-index: 999;
@@ -361,6 +377,7 @@
   <div class="tab" data-tab="mutual" onclick="showTab('mutual')">Mutual Funds <span class="tab-badge" id="badge-mutual">0</span></div>
   <div class="tab" data-tab="realestate" onclick="showTab('realestate')">Real Estate <span class="tab-badge" id="badge-realestate">0</span></div>
   <div class="tab" data-tab="indiamf" onclick="showTab('indiamf')">India MF <span class="tab-badge" id="badge-indiamf">0</span></div>
+  <div class="tab" data-tab="custom" onclick="showTab('custom')">＋ Custom <span class="tab-badge" id="badge-custom">0</span></div>
   <div class="tab" data-tab="cpf" onclick="showTab('cpf')">CPF</div>
   <div class="tab" data-tab="settings" onclick="showTab('settings')">Settings</div>
 </nav>
@@ -511,6 +528,23 @@
           <tfoot><tr id="reTfoot"></tr></tfoot>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CUSTOM ASSETS ═══════════════════ -->
+  <div id="panel-custom" class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:18px;font-weight:700">Custom Asset Categories</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:4px">Create your own categories — Gold, Fixed Deposits, SRS, Bonds, or anything else</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('newcategory')">＋ New Category</button>
+    </div>
+    <div id="customCategoriesContainer"></div>
+    <div id="customEmptyState" class="empty-state" style="display:none">
+      <div class="empty-icon">🗂️</div>
+      <div class="empty-msg">No custom categories yet.<br>Click "+ New Category" to create one — e.g. Gold, Fixed Deposits, SRS, Bonds.</div>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="openModal('newcategory')">＋ New Category</button>
     </div>
   </div>
 
@@ -882,6 +916,106 @@
   </div>
 </div>
 
+<!-- NEW CATEGORY MODAL -->
+<div class="overlay" id="modal-newcategory">
+  <div class="modal">
+    <div class="modal-title" id="newCatModalTitle">New Asset Category</div>
+    <button class="modal-close" onclick="closeModal('newcategory')">✕</button>
+    <input type="hidden" id="newCatEditId">
+    <div class="form-row">
+      <label>Category Name *</label>
+      <input type="text" id="newCatName" placeholder="e.g. Gold, Fixed Deposits, SRS, Bonds, Cash">
+    </div>
+    <div class="form-row">
+      <label>Icon</label>
+      <div class="icon-picker-wrap" id="iconPicker">
+        <div class="icon-opt selected" data-icon="💰" onclick="selectIcon(this)">💰</div>
+        <div class="icon-opt" data-icon="🥇" onclick="selectIcon(this)">🥇</div>
+        <div class="icon-opt" data-icon="🏦" onclick="selectIcon(this)">🏦</div>
+        <div class="icon-opt" data-icon="📊" onclick="selectIcon(this)">📊</div>
+        <div class="icon-opt" data-icon="🔐" onclick="selectIcon(this)">🔐</div>
+        <div class="icon-opt" data-icon="💎" onclick="selectIcon(this)">💎</div>
+        <div class="icon-opt" data-icon="🌏" onclick="selectIcon(this)">🌏</div>
+        <div class="icon-opt" data-icon="🚗" onclick="selectIcon(this)">🚗</div>
+        <div class="icon-opt" data-icon="⚡" onclick="selectIcon(this)">⚡</div>
+        <div class="icon-opt" data-icon="🎯" onclick="selectIcon(this)">🎯</div>
+        <div class="icon-opt" data-icon="📈" onclick="selectIcon(this)">📈</div>
+        <div class="icon-opt" data-icon="🏅" onclick="selectIcon(this)">🏅</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Colour</label>
+      <div class="color-picker-wrap" id="colorPicker">
+        <div class="color-swatch selected" data-color="#f59e0b" style="background:#f59e0b" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#3b82f6" style="background:#3b82f6" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#22c55e" style="background:#22c55e" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#ef4444" style="background:#ef4444" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#a855f7" style="background:#a855f7" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#14b8a6" style="background:#14b8a6" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#f97316" style="background:#f97316" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#ec4899" style="background:#ec4899" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#6366f1" style="background:#6366f1" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#0ea5e9" style="background:#0ea5e9" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#84cc16" style="background:#84cc16" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#94a3b8" style="background:#94a3b8" onclick="selectColor(this)"></div>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('newcategory')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategory()">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CUSTOM HOLDING MODAL -->
+<div class="overlay" id="modal-customholding">
+  <div class="modal">
+    <div class="modal-title" id="customHoldingTitle">Add Holding</div>
+    <button class="modal-close" onclick="closeModal('customholding')">✕</button>
+    <input type="hidden" id="chEditId">
+    <input type="hidden" id="chCategoryId">
+    <div class="form-row">
+      <label>Name *</label>
+      <input type="text" id="chName" placeholder="e.g. Gold Bar 50g, DBS FD 3.5%, SRS Account">
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Current Value *</label>
+        <input type="number" id="chCurrentValue" min="0" step="any" placeholder="5000">
+      </div>
+      <div class="form-row">
+        <label>Purchase / Cost Price</label>
+        <input type="number" id="chCostPrice" min="0" step="any" placeholder="4500">
+      </div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Currency</label>
+        <select id="chCurrency">
+          <option value="SGD">SGD (S$)</option>
+          <option value="USD">USD ($)</option>
+          <option value="INR">INR (₹)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="AUD">AUD (A$)</option>
+          <option value="HKD">HKD (HK$)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Date Purchased</label>
+        <input type="date" id="chDate">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Notes</label>
+      <input type="text" id="chNotes" placeholder="e.g. Matures Dec 2025, 3.5% p.a.">
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-secondary" onclick="closeModal('customholding')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomHolding()">Save Holding</button>
+    </div>
+  </div>
+</div>
+
 <!-- INDIA MF MODAL -->
 <div class="overlay" id="modal-indiamf">
   <div class="modal">
@@ -1175,6 +1309,8 @@ function getData() {
     if (!d.cpfInvestments) d.cpfInvestments = [];
     if (!d.snapshots) d.snapshots = [];
     if (!d.indiaMf) d.indiaMf = [];
+    if (!d.customCategories) d.customCategories = [];
+    if (!d.customHoldings) d.customHoldings = [];
     if (!d.settings.usdToSgd) d.settings.usdToSgd = 1.35;
     if (!d.settings.inrToSgd) d.settings.inrToSgd = 0.016;
     return d;
@@ -1351,6 +1487,7 @@ function renderAll() {
   renderIndiaMf();
   renderRealEstate();
   renderCpf();
+  renderCustomAssets();
   syncSettings();
 }
 
@@ -1375,8 +1512,8 @@ function updateLastUpdated() {
 
 // ── OVERVIEW ──
 function calcTotals() {
-  let stockVal = 0, cryptoVal = 0, mutualVal = 0, reVal = 0, cpfVal = 0, cpfInvVal = 0, indiaMfVal = 0;
-  let stockCost = 0, cryptoCost = 0, mutualCost = 0, indiaMfCost = 0;
+  let stockVal = 0, cryptoVal = 0, mutualVal = 0, reVal = 0, cpfVal = 0, cpfInvVal = 0, indiaMfVal = 0, customVal = 0;
+  let stockCost = 0, cryptoCost = 0, mutualCost = 0, indiaMfCost = 0, customCost = 0;
 
   for (const s of state.stocks) {
     const cost = toDisplay(s.shares * s.avgCost, s.currency);
@@ -1411,6 +1548,10 @@ function calcTotals() {
     const nav = f.currentNav || f.avgNav;
     indiaMfVal += toDisplay(f.units * nav, 'INR');
   }
+  for (const h of (state.customHoldings||[])) {
+    customVal  += toDisplay(h.currentValue || 0, h.currency || 'SGD');
+    customCost += toDisplay(h.costPrice || h.currentValue || 0, h.currency || 'SGD');
+  }
   const cpf = state.cpf;
   cpfVal = toDisplay((cpf.oa||0) + (cpf.sa||0) + (cpf.ma||0) + (cpf.ra||0), 'SGD');
   for (const inv of state.cpfInvestments) {
@@ -1418,13 +1559,13 @@ function calcTotals() {
     cpfInvVal += toDisplay(inv.units * nav, 'SGD');
   }
 
-  const totalVal = stockVal + cryptoVal + mutualVal + reVal + cpfVal + cpfInvVal + indiaMfVal;
-  const totalCost = stockCost + cryptoCost + mutualCost + indiaMfCost;
-  const investedVal = stockVal + cryptoVal + mutualVal + indiaMfVal;
+  const totalVal = stockVal + cryptoVal + mutualVal + reVal + cpfVal + cpfInvVal + indiaMfVal + customVal;
+  const totalCost = stockCost + cryptoCost + mutualCost + indiaMfCost + customCost;
+  const investedVal = stockVal + cryptoVal + mutualVal + indiaMfVal + customVal;
   const totalPL = investedVal - totalCost;
   const totalPLPct = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
 
-  return { totalVal, totalCost, totalPL, totalPLPct, stockVal, cryptoVal, mutualVal, reVal, cpfVal, cpfInvVal, indiaMfVal };
+  return { totalVal, totalCost, totalPL, totalPLPct, stockVal, cryptoVal, mutualVal, reVal, cpfVal, cpfInvVal, indiaMfVal, customVal };
 }
 
 function renderOverview() {
@@ -1464,6 +1605,14 @@ function renderOverview() {
 
 function renderAllocChart(t) {
   const labels = [], data = [], colors = [];
+  // Build custom category breakdown
+  const customCats = (state.customCategories||[]).map(cat => {
+    const val = (state.customHoldings||[])
+      .filter(h => h.categoryId === cat.id)
+      .reduce((s, h) => s + toDisplay(h.currentValue||0, h.currency||'SGD'), 0);
+    return { label: cat.name, val, color: cat.color };
+  }).filter(c => c.val > 0);
+
   const cats = [
     { label: 'Stocks/ETFs', val: t.stockVal, color: '#3b82f6' },
     { label: 'Crypto', val: t.cryptoVal, color: '#a855f7' },
@@ -1471,6 +1620,7 @@ function renderAllocChart(t) {
     { label: 'India MF', val: t.indiaMfVal, color: '#f97316' },
     { label: 'Real Estate', val: t.reVal, color: '#f59e0b' },
     { label: 'CPF', val: t.cpfVal + t.cpfInvVal, color: '#14b8a6' },
+    ...customCats,
   ].filter(c => c.val > 0);
 
   cats.forEach(c => { labels.push(c.label); data.push(c.val); colors.push(c.color); });
@@ -1567,6 +1717,14 @@ function renderTopHoldings(t) {
   });
   state.realEstate.forEach(p => {
     holdings.push({ name: p.name.substring(0,20), sub: p.type || 'Property', val: toDisplay(p.currentValue * ((p.ownership||100)/100), p.currency || 'SGD'), color: COLORS[idx++%12] });
+  });
+
+  // Custom assets — group by category
+  (state.customCategories||[]).forEach(cat => {
+    const val = (state.customHoldings||[])
+      .filter(h => h.categoryId === cat.id)
+      .reduce((s, h) => s + toDisplay(h.currentValue||0, h.currency||'SGD'), 0);
+    if (val > 0) holdings.push({ name: cat.name, sub: 'Custom · ' + (state.customHoldings||[]).filter(h=>h.categoryId===cat.id).length + ' holding(s)', val, color: cat.color });
   });
 
   // CPF
@@ -1797,6 +1955,233 @@ function renderIndiaMf() {
       <div class="card-value" style="font-size:20px">₹1 = ${sym(ccy())}${inrRate().toFixed(4)}</div>
       <div class="card-sub"><a href="#" onclick="showTab('settings');return false">Update in Settings</a></div>
     </div>`;
+}
+
+// ══════════════════════════════════════════════════
+//  CUSTOM ASSETS
+// ══════════════════════════════════════════════════
+function renderCustomAssets() {
+  state = getData();
+  const cats = state.customCategories || [];
+  const holdings = state.customHoldings || [];
+  const badge = document.getElementById('badge-custom');
+  const totalHoldings = holdings.length;
+  if (badge) badge.textContent = totalHoldings;
+
+  const container = document.getElementById('customCategoriesContainer');
+  const empty = document.getElementById('customEmptyState');
+  if (!cats.length) {
+    container.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  container.innerHTML = cats.map(cat => {
+    const catHoldings = holdings.filter(h => h.categoryId === cat.id);
+    let totVal = 0, totCost = 0;
+    catHoldings.forEach(h => {
+      totVal  += toDisplay(h.currentValue || 0, h.currency || 'SGD');
+      totCost += toDisplay(h.costPrice || h.currentValue || 0, h.currency || 'SGD');
+    });
+    const pl = totVal - totCost;
+    const plPct = totCost > 0 ? (pl / totCost) * 100 : 0;
+
+    const rows = catHoldings.length ? catHoldings.map(h => {
+      const val  = toDisplay(h.currentValue || 0, h.currency || 'SGD');
+      const cost = toDisplay(h.costPrice || h.currentValue || 0, h.currency || 'SGD');
+      const hpl  = val - cost;
+      const hplPct = cost > 0 ? (hpl / cost) * 100 : 0;
+      return `<tr>
+        <td><div style="font-weight:500">${h.name}</div>${h.notes ? `<div style="font-size:11px;color:var(--text3)">${h.notes}</div>` : ''}</td>
+        <td style="color:var(--text3)">${h.date || '—'}</td>
+        <td style="text-align:right">${sym(h.currency||'SGD')}${(+(h.costPrice||h.currentValue||0)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td style="text-align:right;font-weight:600">${sym(h.currency||'SGD')}${(+(h.currentValue||0)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td style="text-align:right;font-weight:600">${fmt(val)}</td>
+        <td style="text-align:right" class="${plClass(hpl)}">${plSign(hpl)}${fmt(hpl)}</td>
+        <td style="text-align:right" class="${plClass(hplPct)}">${fmtPct(hplPct)}</td>
+        <td><div class="act-btns">
+          <button class="btn btn-secondary btn-sm" onclick="editCustomHolding('${h.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCustomHolding('${h.id}')">🗑</button>
+        </div></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="8"><div class="empty-state" style="padding:20px"><div class="empty-msg">No holdings yet in this category.</div></div></td></tr>`;
+
+    return `<div class="cat-block">
+      <div class="cat-header" style="border-left:4px solid ${cat.color}">
+        <div class="cat-icon" style="background:${cat.color}22">${cat.icon||'💰'}</div>
+        <div>
+          <div class="cat-title">${cat.name}</div>
+          <div class="cat-subtitle">${catHoldings.length} holding${catHoldings.length!==1?'s':''} · Total: <strong>${fmt(totVal)}</strong>
+            ${pl !== 0 ? `<span class="${plClass(pl)}" style="margin-left:6px">${plSign(pl)}${fmt(pl)} (${fmtPct(plPct)})</span>` : ''}
+          </div>
+        </div>
+        <div class="cat-header-actions">
+          <button class="btn btn-primary btn-sm" onclick="openAddHolding('${cat.id}','${cat.name}')">+ Add</button>
+          <button class="btn btn-secondary btn-sm" onclick="editCategory('${cat.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCategory('${cat.id}')">🗑</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Name / Description</th>
+            <th>Date</th>
+            <th style="text-align:right">Cost Price</th>
+            <th style="text-align:right">Current Value</th>
+            <th style="text-align:right">Value (${ccy()})</th>
+            <th style="text-align:right">P&L</th>
+            <th style="text-align:right">P&L %</th>
+            <th></th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+          ${catHoldings.length ? `<tfoot><tr>
+            <td colspan="4" style="font-weight:600;padding:12px 16px">TOTAL</td>
+            <td style="text-align:right;font-weight:700;padding:12px 16px">${fmt(totVal)}</td>
+            <td style="text-align:right;padding:12px 16px" class="${plClass(pl)}">${plSign(pl)}${fmt(pl)}</td>
+            <td style="text-align:right;padding:12px 16px" class="${plClass(plPct)}">${totCost>0?fmtPct(plPct):'—'}</td>
+            <td style="padding:12px 16px"></td>
+          </tr></tfoot>` : ''}
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── CATEGORY CRUD ──
+function selectColor(el) {
+  document.querySelectorAll('#colorPicker .color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectIcon(el) {
+  document.querySelectorAll('#iconPicker .icon-opt').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function getSelectedColor() {
+  return document.querySelector('#colorPicker .color-swatch.selected')?.dataset.color || '#f59e0b';
+}
+function getSelectedIcon() {
+  return document.querySelector('#iconPicker .icon-opt.selected')?.dataset.icon || '💰';
+}
+
+function saveCategory() {
+  const name = document.getElementById('newCatName').value.trim();
+  if (!name) { toast('Please enter a category name', 'error'); return; }
+  const color = getSelectedColor();
+  const icon  = getSelectedIcon();
+  const editId = document.getElementById('newCatEditId').value;
+  state = getData();
+  if (!state.customCategories) state.customCategories = [];
+  if (editId) {
+    const idx = state.customCategories.findIndex(c => c.id === editId);
+    if (idx >= 0) state.customCategories[idx] = { ...state.customCategories[idx], name, color, icon };
+    toast('Category updated', 'success');
+  } else {
+    state.customCategories.push({ id: uid(), name, color, icon });
+    toast(`"${name}" category created!`, 'success');
+  }
+  save(state);
+  closeModal('newcategory');
+  showTab('custom');
+}
+
+function editCategory(id) {
+  state = getData();
+  const cat = (state.customCategories||[]).find(c => c.id === id);
+  if (!cat) return;
+  document.getElementById('newCatModalTitle').textContent = 'Edit Category';
+  document.getElementById('newCatEditId').value = cat.id;
+  document.getElementById('newCatName').value = cat.name;
+  // Set color
+  document.querySelectorAll('#colorPicker .color-swatch').forEach(s => {
+    s.classList.toggle('selected', s.dataset.color === cat.color);
+  });
+  // Set icon
+  document.querySelectorAll('#iconPicker .icon-opt').forEach(s => {
+    s.classList.toggle('selected', s.dataset.icon === cat.icon);
+  });
+  openModal('newcategory');
+}
+
+function deleteCategory(id) {
+  state = getData();
+  const cat = (state.customCategories||[]).find(c => c.id === id);
+  const holdingsCount = (state.customHoldings||[]).filter(h => h.categoryId === id).length;
+  const msg = holdingsCount > 0
+    ? `Delete "${cat?.name}" and its ${holdingsCount} holding(s)?`
+    : `Delete category "${cat?.name}"?`;
+  if (!confirm(msg)) return;
+  state.customCategories = (state.customCategories||[]).filter(c => c.id !== id);
+  state.customHoldings   = (state.customHoldings||[]).filter(h => h.categoryId !== id);
+  save(state);
+  toast('Category deleted', 'success');
+}
+
+// ── HOLDING CRUD ──
+function openAddHolding(categoryId, categoryName) {
+  document.getElementById('customHoldingTitle').textContent = `Add to ${categoryName}`;
+  document.getElementById('chEditId').value = '';
+  document.getElementById('chCategoryId').value = categoryId;
+  document.getElementById('chName').value = '';
+  document.getElementById('chCurrentValue').value = '';
+  document.getElementById('chCostPrice').value = '';
+  document.getElementById('chCurrency').value = 'SGD';
+  document.getElementById('chDate').value = '';
+  document.getElementById('chNotes').value = '';
+  openModal('customholding');
+}
+
+function saveCustomHolding() {
+  const name         = document.getElementById('chName').value.trim();
+  const currentValue = parseFloat(document.getElementById('chCurrentValue').value);
+  const costPrice    = parseFloat(document.getElementById('chCostPrice').value) || null;
+  const currency     = document.getElementById('chCurrency').value;
+  const date         = document.getElementById('chDate').value;
+  const notes        = document.getElementById('chNotes').value.trim();
+  const categoryId   = document.getElementById('chCategoryId').value;
+  const editId       = document.getElementById('chEditId').value;
+
+  if (!name || isNaN(currentValue) || currentValue < 0) {
+    toast('Please enter a name and current value', 'error'); return;
+  }
+  state = getData();
+  if (!state.customHoldings) state.customHoldings = [];
+  const entry = { id: uid(), categoryId, name, currentValue, costPrice, currency, date, notes };
+  if (editId) {
+    const idx = state.customHoldings.findIndex(h => h.id === editId);
+    if (idx >= 0) state.customHoldings[idx] = { ...entry, id: editId };
+    toast('Holding updated', 'success');
+  } else {
+    state.customHoldings.push(entry);
+    toast('Holding added!', 'success');
+  }
+  save(state);
+  closeModal('customholding');
+}
+
+function editCustomHolding(id) {
+  state = getData();
+  const h = (state.customHoldings||[]).find(x => x.id === id);
+  if (!h) return;
+  const cat = (state.customCategories||[]).find(c => c.id === h.categoryId);
+  document.getElementById('customHoldingTitle').textContent = `Edit Holding — ${cat?.name||''}`;
+  document.getElementById('chEditId').value = h.id;
+  document.getElementById('chCategoryId').value = h.categoryId;
+  document.getElementById('chName').value = h.name;
+  document.getElementById('chCurrentValue').value = h.currentValue;
+  document.getElementById('chCostPrice').value = h.costPrice||'';
+  document.getElementById('chCurrency').value = h.currency||'SGD';
+  document.getElementById('chDate').value = h.date||'';
+  document.getElementById('chNotes').value = h.notes||'';
+  openModal('customholding');
+}
+
+function deleteCustomHolding(id) {
+  if (!confirm('Delete this holding?')) return;
+  state = getData();
+  state.customHoldings = (state.customHoldings||[]).filter(h => h.id !== id);
+  save(state);
+  toast('Deleted', 'success');
 }
 
 // ── INDIA MF CRUD ──
