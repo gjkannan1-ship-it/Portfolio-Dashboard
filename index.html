@@ -1597,6 +1597,12 @@ function renderOverview() {
       <div class="card-value">${fmt(t.reVal)}</div>
       <div class="card-sub">My share at current value</div>
     </div>
+    ${t.customVal > 0 ? `
+    <div class="card" style="border-left:3px solid #ec4899">
+      <div class="card-label">Custom Assets</div>
+      <div class="card-value">${fmt(t.customVal)}</div>
+      <div class="card-sub">${(state.customCategories||[]).length} categor${(state.customCategories||[]).length===1?'y':'ies'} · ${(state.customHoldings||[]).length} holding${(state.customHoldings||[]).length!==1?'s':''}</div>
+    </div>` : ''}
   `;
   renderAllocChart(t);
   renderPerfChart();
@@ -1961,7 +1967,8 @@ function renderIndiaMf() {
 //  CUSTOM ASSETS
 // ══════════════════════════════════════════════════
 function renderCustomAssets() {
-  state = getData();
+  // state is already fresh when called from renderAll(); re-read only if called standalone
+  if (!state.customCategories) state = getData();
   const cats = state.customCategories || [];
   const holdings = state.customHoldings || [];
   const badge = document.getElementById('badge-custom');
@@ -2083,6 +2090,7 @@ function saveCategory() {
   save(state);
   closeModal('newcategory');
   showTab('custom');
+  toast(editId ? 'Category updated ✓' : `"${name}" category created! Now click "+ Add" inside it to add holdings.`, 'success');
 }
 
 function editCategory(id) {
@@ -2157,6 +2165,7 @@ function saveCustomHolding() {
   }
   save(state);
   closeModal('customholding');
+  toast('Holding saved! Switch to Overview to see it in the chart.', 'success');
 }
 
 function editCustomHolding(id) {
